@@ -4,6 +4,7 @@ enum Opcodes {
     LDY = 0xA0,
     TAX = 0xAA,
     INX = 0xE8,
+    INY = 0xC8,
     BRK = 0x00,
 }
 
@@ -15,6 +16,7 @@ impl Opcodes {
             0xA0 => Ok(Self::LDY),
             0xAA => Ok(Self::TAX),
             0xE8 => Ok(Self::INX),
+            0xC8 => Ok(Self::INY),
             0x00 => Ok(Self::BRK),
             _ => Err(()),
         }
@@ -77,6 +79,12 @@ impl CPU {
                 Opcodes::INX => {
                     let result = self.register_x.wrapping_add(1);
                     self.register_x = result;
+                    self.update_negative_flag(result);
+                    self.update_zero_flag(result);
+                }
+                Opcodes::INY => {
+                    let result = self.register_y.wrapping_add(1);
+                    self.register_y = result;
                     self.update_negative_flag(result);
                     self.update_zero_flag(result);
                 }
@@ -244,6 +252,32 @@ mod test {
         cpu.interpret(vec![0xe8, 0xe8, 0x00]);
 
         assert_eq!(cpu.register_x, 1)
+    }
+
+    #[test]
+    fn test_0xc8_incremented_register_y() {
+        let mut cpu = CPU::new();
+        cpu.register_y = 0x5d;
+        cpu.interpret(vec![0xc8, 0x00]);
+        assert_eq!(cpu.register_y, 0x5e);
+        assert!(cpu.status & 0b0000_0010 == 0b0);
+    }
+
+    #[test]
+    fn test_0xc8_incremented_negative_flag() {
+        let mut cpu = CPU::new();
+        cpu.register_y = 0xab;
+        cpu.interpret(vec![0xc8, 0x00]);
+        assert!(cpu.status & 0b1000_0000 == 0x80);
+    }
+
+    #[test]
+    fn test_0xc8_overflow() {
+        let mut cpu = CPU::new();
+        cpu.register_y = 0xff;
+        cpu.interpret(vec![0xc8, 0xc8, 0x00]);
+
+        assert_eq!(cpu.register_y, 1)
     }
 
     #[test]
