@@ -1,5 +1,7 @@
 enum Opcodes {
     LDA = 0xA9,
+    LDX = 0xA2,
+    LDY = 0xA0,
     TAX = 0xAA,
     INX = 0xE8,
     BRK = 0x00,
@@ -9,6 +11,8 @@ impl Opcodes {
     fn from_u8(value: u8) -> Result<Self, ()> {
         match value {
             0xA9 => Ok(Self::LDA),
+            0xA2 => Ok(Self::LDX),
+            0xA0 => Ok(Self::LDY),
             0xAA => Ok(Self::TAX),
             0xE8 => Ok(Self::INX),
             0x00 => Ok(Self::BRK),
@@ -20,6 +24,7 @@ impl Opcodes {
 pub struct CPU {
     pub register_a: u8,
     pub register_x: u8,
+    pub register_y: u8,
     /* 8-bit register represents 7 status flags that can be set or unset depending on the result of the last executed instruction.
     (for example Z flag is set (1) if the result of an operation is 0, and is unset/erased (0) otherwise)
       0b0000_0000
@@ -34,6 +39,7 @@ impl CPU {
         CPU {
             register_a: 0,
             register_x: 0,
+            register_y: 0,
             status: 0,
             program_counter: 0,
         }
@@ -47,6 +53,18 @@ impl CPU {
                 Opcodes::LDA => {
                     let param = program[self.get_instruction()];
                     self.register_a = param;
+                    self.update_negative_flag(param);
+                    self.update_zero_flag(param);
+                }
+                Opcodes::LDX => {
+                    let param = program[self.get_instruction()];
+                    self.register_x = param;
+                    self.update_negative_flag(param);
+                    self.update_zero_flag(param);
+                }
+                Opcodes::LDY => {
+                    let param = program[self.get_instruction()];
+                    self.register_y = param;
                     self.update_negative_flag(param);
                     self.update_zero_flag(param);
                 }
@@ -123,6 +141,56 @@ mod test {
         let mut cpu = CPU::new();
         cpu.interpret(vec![0xa9, 0xff, 0x00]);
         assert_eq!(cpu.register_a, 0xff);
+        assert!(cpu.status & 0b0000_0010 == 0b00);
+        assert!(cpu.status & 0b1000_0000 == 0x80);
+    }
+
+    #[test]
+    fn test_0xa2_ldx_immediately_load_data() {
+        let mut cpu = CPU::new();
+        cpu.interpret(vec![0xa2, 0x05, 0x00]);
+        assert_eq!(cpu.register_x, 0x05);
+        assert!(cpu.status & 0b0000_0010 == 0b0);
+        assert!(cpu.status & 0b1000_0000 == 0);
+    }
+
+    #[test]
+    fn test_0xa2_ldx_zero_flag() {
+        let mut cpu = CPU::new();
+        cpu.interpret(vec![0xa2, 0x00, 0x00]);
+        assert!(cpu.status & 0b0000_0010 == 0b10);
+    }
+
+    #[test]
+    fn test_0xa2_ldx_negative_flag() {
+        let mut cpu = CPU::new();
+        cpu.interpret(vec![0xa2, 0xff, 0x00]);
+        assert_eq!(cpu.register_x, 0xff);
+        assert!(cpu.status & 0b0000_0010 == 0b00);
+        assert!(cpu.status & 0b1000_0000 == 0x80);
+    }
+
+    #[test]
+    fn test_0xa0_ldy_immediately_load_data() {
+        let mut cpu = CPU::new();
+        cpu.interpret(vec![0xa0, 0x05, 0x00]);
+        assert_eq!(cpu.register_y, 0x05);
+        assert!(cpu.status & 0b0000_0010 == 0b0);
+        assert!(cpu.status & 0b1000_0000 == 0);
+    }
+
+    #[test]
+    fn test_0xa0_ldy_zero_flag() {
+        let mut cpu = CPU::new();
+        cpu.interpret(vec![0xa0, 0x00, 0x00]);
+        assert!(cpu.status & 0b0000_0010 == 0b10);
+    }
+
+    #[test]
+    fn test_0xa0_ldy_negative_flag() {
+        let mut cpu = CPU::new();
+        cpu.interpret(vec![0xa0, 0xff, 0x00]);
+        assert_eq!(cpu.register_y, 0xff);
         assert!(cpu.status & 0b0000_0010 == 0b00);
         assert!(cpu.status & 0b1000_0000 == 0x80);
     }
