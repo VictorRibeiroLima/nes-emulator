@@ -3,6 +3,7 @@ enum Opcodes {
     LDX = 0xA2,
     LDY = 0xA0,
     TAX = 0xAA,
+    TAY = 0xA8,
     INX = 0xE8,
     INY = 0xC8,
     BRK = 0x00,
@@ -15,6 +16,7 @@ impl Opcodes {
             0xA2 => Ok(Self::LDX),
             0xA0 => Ok(Self::LDY),
             0xAA => Ok(Self::TAX),
+            0xA8 => Ok(Self::TAY),
             0xE8 => Ok(Self::INX),
             0xC8 => Ok(Self::INY),
             0x00 => Ok(Self::BRK),
@@ -73,6 +75,12 @@ impl CPU {
                 Opcodes::TAX => {
                     let result = self.register_a;
                     self.register_x = result;
+                    self.update_negative_flag(result);
+                    self.update_zero_flag(result);
+                }
+                Opcodes::TAY => {
+                    let result = self.register_a;
+                    self.register_y = result;
                     self.update_negative_flag(result);
                     self.update_zero_flag(result);
                 }
@@ -225,6 +233,31 @@ mod test {
         let mut cpu = CPU::new();
         cpu.register_a = 0x80;
         cpu.interpret(vec![0xaa, 0x00]);
+        assert!(cpu.status & 0b1000_0000 == 0x80);
+    }
+
+    #[test]
+    fn test_0xa8_tay_copied_a_to_y() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 10;
+        cpu.interpret(vec![0xa8, 0x00]);
+        assert_eq!(cpu.register_a, cpu.register_y);
+        assert_eq!(cpu.register_y, 10);
+    }
+
+    #[test]
+    fn test_0xa8_tay_zero_flag() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0;
+        cpu.interpret(vec![0xa8, 0x00]);
+        assert!(cpu.status & 0b0000_0010 == 0b10);
+    }
+
+    #[test]
+    fn test_0xa8_tay_negative_flag() {
+        let mut cpu = CPU::new();
+        cpu.register_a = 0x80;
+        cpu.interpret(vec![0xa8, 0x00]);
         assert!(cpu.status & 0b1000_0000 == 0x80);
     }
 
