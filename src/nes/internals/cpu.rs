@@ -1,29 +1,7 @@
-enum Opcodes {
-    LDA = 0xA9,
-    LDX = 0xA2,
-    LDY = 0xA0,
-    TAX = 0xAA,
-    TAY = 0xA8,
-    INX = 0xE8,
-    INY = 0xC8,
-    BRK = 0x00,
-}
-
-impl Opcodes {
-    fn from_u8(value: u8) -> Result<Self, ()> {
-        match value {
-            0xA9 => Ok(Self::LDA),
-            0xA2 => Ok(Self::LDX),
-            0xA0 => Ok(Self::LDY),
-            0xAA => Ok(Self::TAX),
-            0xA8 => Ok(Self::TAY),
-            0xE8 => Ok(Self::INX),
-            0xC8 => Ok(Self::INY),
-            0x00 => Ok(Self::BRK),
-            _ => Err(()),
-        }
-    }
-}
+use super::{
+    memory::Memory,
+    opcodes::{AddressingMode, Opcodes},
+};
 
 pub struct CPU {
     pub register_a: u8,
@@ -39,39 +17,64 @@ pub struct CPU {
     memory: [u8; 0xFFFF],
 }
 
-trait Memory {
-    fn read_from_memory(&self, addr: u16) -> u8;
-
-    fn write_to_memory(&mut self, addr: u16, data: u8);
-
-    fn read_from_memory_le(&self, addr: u16) -> u16 {
-        let lo = self.read_from_memory(addr) as u16;
-        let hi = self.read_from_memory(addr + 1) as u16;
-        /*hi << 8 moves the value of the first half of this 16bit data to the second half
-          0b0000_0000_1111_1111 becomes 0b1111_1111_0000_0000
-        */
-        (hi << 8) | (lo as u16)
-    }
-
-    fn write_to_memory_le(&mut self, addr: u16, data: u16) {
-        /*data >> 8 moves the value of the second half of this 16bit data to the first half
-        0b1111_1111_0000_0000 becomes 0b0000_0000_1111_1111
-        */
-        let hi = (data >> 8) as u8;
-
-        //data & 0xff (0b0000_0000_1111_1111) just unset's the second half to make sure this conversion does't break
-        let lo = (data & 0xff) as u8;
-        self.write_to_memory(addr, lo);
-        self.write_to_memory(addr + 1, hi);
-    }
-}
-
 impl Memory for CPU {
     fn read_from_memory(&self, addr: u16) -> u8 {
         return self.memory[addr as usize];
     }
     fn write_to_memory(&mut self, addr: u16, data: u8) {
         self.memory[addr as usize] = data;
+    }
+
+    fn get_memory_addr(&self, mode: AddressingMode) -> u16 {
+        match mode {
+            AddressingMode::IMMEDIATE => self.program_counter,
+
+            AddressingMode::ZERO_PAGE => self.read_from_memory(self.program_counter) as u16,
+
+            AddressingMode::ABSOLUTE => self.read_from_memory_le(self.program_counter),
+
+            AddressingMode::ZERO_PAGE_X => {
+                let pos = self.read_from_memory(self.program_counter);
+                let addr = pos.wrapping_add(self.register_x) as u16;
+                return addr;
+            }
+            AddressingMode::ZERO_PAGE_Y => {
+                let pos = self.read_from_memory(self.program_counter);
+                let addr = pos.wrapping_add(self.register_y) as u16;
+                return addr;
+            }
+
+            AddressingMode::ABSOLUTE_X => {
+                let base = self.read_from_memory_le(self.program_counter);
+                let addr = base.wrapping_add(self.register_x as u16);
+                return addr;
+            }
+            AddressingMode::ABSOLUTE_Y => {
+                let base = self.read_from_memory_le(self.program_counter);
+                let addr = base.wrapping_add(self.register_y as u16);
+                return addr;
+            }
+
+            AddressingMode::INDIRECT_X => {
+                let base = self.read_from_memory(self.program_counter);
+
+                let ptr: u8 = base.wrapping_add(self.register_x);
+
+                let lo = self.read_from_memory(ptr as u16);
+                let hi = self.read_from_memory(ptr.wrapping_add(1) as u16);
+                let addr = (hi as u16) << 8 | (lo as u16);
+                return addr;
+            }
+            AddressingMode::INDIRECT_Y => {
+                let base = self.read_from_memory(self.program_counter);
+
+                let lo = self.read_from_memory(base as u16);
+                let hi = self.read_from_memory(base.wrapping_add(1) as u16);
+                let deref_base = (hi as u16) << 8 | (lo as u16);
+                let addr = deref_base.wrapping_add(self.register_y as u16);
+                return addr;
+            }
+        }
     }
 }
 
@@ -113,26 +116,21 @@ impl CPU {
 
     pub fn run(&mut self) {
         loop {
-            let opcode_value = self.next_instruction();
+            let opcode_value = self.read_from_memory(self.program_counter);
+            self.program_counter += 1;
             let opcode = Opcodes::from_u8(opcode_value).expect("Valid opcode");
             match opcode {
-                Opcodes::LDA => {
-                    let param = self.next_instruction();
-                    self.register_a = param;
-                    self.update_negative_flag(param);
-                    self.update_zero_flag(param);
+                Opcodes::LDA(addr_mode) => {
+                    let value = self.get_value_to_load(addr_mode);
+                    self.register_a = value;
                 }
-                Opcodes::LDX => {
-                    let param = self.next_instruction();
-                    self.register_x = param;
-                    self.update_negative_flag(param);
-                    self.update_zero_flag(param);
+                Opcodes::LDX(addr_mode) => {
+                    let value = self.get_value_to_load(addr_mode);
+                    self.register_x = value;
                 }
-                Opcodes::LDY => {
-                    let param = self.next_instruction();
-                    self.register_y = param;
-                    self.update_negative_flag(param);
-                    self.update_zero_flag(param);
+                Opcodes::LDY(addr_mode) => {
+                    let value = self.get_value_to_load(addr_mode);
+                    self.register_y = value;
                 }
                 Opcodes::TAX => {
                     let result = self.register_a;
@@ -165,6 +163,16 @@ impl CPU {
         }
     }
 
+    fn get_value_to_load(&mut self, addr_mode: AddressingMode) -> u8 {
+        let mode_increment = addr_mode.get_counter_increment();
+        let addr = self.get_memory_addr(addr_mode);
+        let param = self.read_from_memory(addr);
+        self.update_negative_flag(param);
+        self.update_zero_flag(param);
+        self.program_counter += mode_increment;
+        return param;
+    }
+
     //This method will see the result of an operation and set the Z flag accordantly
     fn update_zero_flag(&mut self, result: u8) {
         if result == 0 {
@@ -186,18 +194,71 @@ impl CPU {
             self.status = self.status & 0b0111_1111;
         }
     }
-
-    fn next_instruction(&mut self) -> u8 {
-        let current_value = self.read_from_memory(self.program_counter);
-        self.program_counter += 1;
-        return current_value;
-    }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
 
+    #[test]
+    fn test_get_memory_addr() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0000;
+        cpu.write_to_memory(0x0000, 0x10);
+        cpu.register_x = 0x05;
+        cpu.register_y = 0x02;
+
+        // IMMEDIATE addressing mode
+        assert_eq!(cpu.get_memory_addr(AddressingMode::IMMEDIATE), 0x0000);
+
+        // ZERO_PAGE addressing mode
+        assert_eq!(cpu.get_memory_addr(AddressingMode::ZERO_PAGE), 0x0010);
+
+        // ABSOLUTE addressing mode
+        cpu.write_to_memory_le(0x0000, 0x20);
+        assert_eq!(cpu.get_memory_addr(AddressingMode::ABSOLUTE), 0x20);
+
+        // ZERO_PAGE_X addressing mode
+        assert_eq!(cpu.get_memory_addr(AddressingMode::ZERO_PAGE_X), 0x25);
+
+        // ZERO_PAGE_Y addressing mode
+        assert_eq!(cpu.get_memory_addr(AddressingMode::ZERO_PAGE_Y), 0x22);
+
+        // ABSOLUTE_X addressing mode
+        cpu.register_x = 0xFF;
+        cpu.write_to_memory_le(0x0000, 0x30);
+        assert_eq!(cpu.get_memory_addr(AddressingMode::ABSOLUTE_X), 0x12f);
+
+        // ABSOLUTE_Y addressing mode
+        cpu.register_y = 0xFF;
+        cpu.write_to_memory_le(0x0000, 0x40);
+        assert_eq!(cpu.get_memory_addr(AddressingMode::ABSOLUTE_Y), 0x13F);
+
+        // INDIRECT_X addressing mode
+        cpu.program_counter = 0x15;
+        cpu.write_to_memory(0x15, 0x60);
+        cpu.write_to_memory(0x5F, 0x70);
+        cpu.write_to_memory(0x60, 0x71);
+        assert_eq!(cpu.get_memory_addr(AddressingMode::INDIRECT_X), 0x7170);
+
+        // INDIRECT_Y addressing mode
+        cpu.program_counter = 0x41;
+        cpu.register_y = 0x31;
+        cpu.write_to_memory(0x41, 0x80);
+        cpu.write_to_memory(0x80, 0x90);
+        cpu.write_to_memory(0x81, 0xFE);
+        assert_eq!(cpu.get_memory_addr(AddressingMode::INDIRECT_Y), 0xFEC1);
+    }
+
+    #[test]
+    fn test_lda_from_memory() {
+        let mut cpu = CPU::new();
+        cpu.write_to_memory(0x10, 0x55);
+
+        cpu.load_and_run(vec![0xa5, 0x10, 0x00]);
+
+        assert_eq!(cpu.register_a, 0x55);
+    }
     #[test]
     fn test_0xa9_lda_immediately_load_data() {
         let mut cpu = CPU::new();
