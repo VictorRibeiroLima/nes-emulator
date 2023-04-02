@@ -132,6 +132,36 @@ impl CPU {
                     let value = self.get_value_to_load(addr_mode);
                     self.register_y = value;
                 }
+                Opcodes::STA(addr_mode) => {
+                    let addr = self.get_memory_addr(addr_mode);
+                    self.write_to_memory(addr, self.register_a);
+                }
+                Opcodes::STX(addr_mode) => {
+                    let addr = self.get_memory_addr(addr_mode);
+                    self.write_to_memory(addr, self.register_x);
+                }
+                Opcodes::STY(addr_mode) => {
+                    let addr = self.get_memory_addr(addr_mode);
+                    self.write_to_memory(addr, self.register_y);
+                }
+                Opcodes::AND(addr_mode) => {
+                    todo!();
+                }
+                Opcodes::ASL(addr_mode) => {
+                    todo!();
+                }
+                Opcodes::BBC => {
+                    todo!();
+                }
+                Opcodes::BCS => {
+                    todo!();
+                }
+                Opcodes::BEQ => {
+                    todo!();
+                }
+                Opcodes::BIT(addr_mode) => {
+                    todo!();
+                }
                 Opcodes::TAX => {
                     let result = self.register_a;
                     self.register_x = result;
