@@ -74,6 +74,7 @@ impl Memory for CPU {
                 let addr = deref_base.wrapping_add(self.register_y as u16);
                 return addr;
             }
+            _ => panic!("Invalid addressing mode"),
         }
     }
 }
@@ -150,7 +151,7 @@ impl CPU {
                 Opcodes::ASL(addr_mode) => {
                     todo!();
                 }
-                Opcodes::BBC => {
+                Opcodes::BCC => {
                     todo!();
                 }
                 Opcodes::BCS => {
@@ -189,6 +190,7 @@ impl CPU {
                 Opcodes::BRK => {
                     break;
                 }
+                _ => todo!(),
             }
         }
     }
