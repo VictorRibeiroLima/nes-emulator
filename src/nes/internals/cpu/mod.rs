@@ -199,6 +199,18 @@ impl CPU {
                 Opcodes::BVS => {
                     self.branch(self.status.contains(StatusFlags::OVERFLOW));
                 }
+                Opcodes::CLC => {
+                    self.status.remove(StatusFlags::CARRY);
+                }
+                Opcodes::CLD => {
+                    self.status.remove(StatusFlags::DECIMAL_MODE);
+                }
+                Opcodes::CLI => {
+                    self.status.remove(StatusFlags::INTERRUPT_DISABLE);
+                }
+                Opcodes::CLV => {
+                    self.status.remove(StatusFlags::OVERFLOW);
+                }
                 Opcodes::LDA(addr_mode) => {
                     let value = self.get_value_from_memory(addr_mode);
                     self.set_register_a(value);

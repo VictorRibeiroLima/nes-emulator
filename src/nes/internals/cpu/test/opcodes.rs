@@ -309,8 +309,8 @@ fn test_and_0x21() {
     cpu.register_a = 0b1010_1010;
     cpu.register_x = 0x01;
     cpu.memory[0x01] = 0x02;
-    cpu.memory[0x02] = 0x03; //tive que modificar
-    cpu.memory[0x0302] = 0b1100_1100; //tive que modificar
+    cpu.memory[0x02] = 0x03;
+    cpu.memory[0x0302] = 0b1100_1100;
     cpu.load(vec![0x21, 0x00, 0x00]);
     cpu.run();
     assert_eq!(cpu.register_a, 0b1000_1000);
@@ -323,7 +323,7 @@ fn test_and_0x31() {
     cpu.register_a = 0b1010_1010;
     cpu.register_y = 0x01;
     cpu.memory[0x01] = 0x02;
-    cpu.memory[0x201] = 0b1100_1100; //tive que modificar
+    cpu.memory[0x201] = 0b1100_1100;
     cpu.load(vec![0x31, 0x00, 0x00]);
     cpu.run();
     assert_eq!(cpu.register_a, 0b1000_1000);
@@ -625,4 +625,44 @@ fn test_bvs_0x70_overflow_flag_not_set() {
     cpu.load(vec![0x70, 0x02, 0xa9, 0xaa, 0x00]);
     cpu.run();
     assert!(cpu.register_a == 0xaa); //set. instruction was executed
+}
+
+#[test]
+fn test_clc_0x18() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status.insert(StatusFlags::CARRY);
+    cpu.load(vec![0x18, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+}
+
+#[test]
+fn test_cld_0xd8() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status.insert(StatusFlags::DECIMAL_MODE);
+    cpu.load(vec![0xd8, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::DECIMAL_MODE));
+}
+
+#[test]
+fn test_cli_0x58() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status.insert(StatusFlags::INTERRUPT_DISABLE);
+    cpu.load(vec![0x58, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::INTERRUPT_DISABLE));
+}
+
+#[test]
+fn test_clv_0xb8() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status.insert(StatusFlags::OVERFLOW);
+    cpu.load(vec![0xb8, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::OVERFLOW));
 }
