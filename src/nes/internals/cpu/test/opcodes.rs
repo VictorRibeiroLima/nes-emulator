@@ -666,3 +666,555 @@ fn test_clv_0xb8() {
     cpu.run();
     assert!(!cpu.status.contains(StatusFlags::OVERFLOW));
 }
+
+#[test]
+fn test_cmp_0xc9_value_equal_to_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.load(vec![0xc9, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xc9_value_less_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x02;
+    cpu.load(vec![0xc9, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xc9_value_greater_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.load(vec![0xc9, 0x02, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xc5_value_equal_to_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.memory[0x00] = 0x01;
+    cpu.load(vec![0xc5, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xc5_value_less_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x02;
+    cpu.memory[0x00] = 0x01;
+    cpu.load(vec![0xc5, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xc5_value_greater_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.memory[0x00] = 0x02;
+    cpu.load(vec![0xc5, 0x00, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xd5_value_equal_to_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_x = 0x01;
+    cpu.memory[0x01] = 0x01;
+    cpu.load(vec![0xd5, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xd5_value_less_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x02;
+    cpu.register_x = 0x01;
+    cpu.memory[0x01] = 0x01;
+    cpu.load(vec![0xd5, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xd5_value_greater_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_x = 0x01;
+    cpu.memory[0x01] = 0x02;
+    cpu.load(vec![0xd5, 0x00, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xcd_value_equal_to_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.memory[0x0000] = 0x01;
+    cpu.load(vec![0xcd, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xcd_value_less_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x02;
+    cpu.memory[0x0000] = 0x01;
+    cpu.load(vec![0xcd, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xcd_value_greater_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.memory[0x0000] = 0x02;
+    cpu.load(vec![0xcd, 0x00, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xdd_value_equal_to_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_x = 0x01;
+    cpu.memory[0x0001] = 0x01;
+    cpu.load(vec![0xdd, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xdd_value_less_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x02;
+    cpu.register_x = 0x01;
+    cpu.memory[0x0001] = 0x01;
+    cpu.load(vec![0xdd, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xdd_value_greater_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_x = 0x01;
+    cpu.memory[0x0001] = 0x02;
+    cpu.load(vec![0xdd, 0x00, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xd9_value_equal_to_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_y = 0x01;
+    cpu.memory[0x0001] = 0x01;
+    cpu.load(vec![0xd9, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xd9_value_less_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x02;
+    cpu.register_y = 0x01;
+    cpu.memory[0x0001] = 0x01;
+    cpu.load(vec![0xd9, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xd9_value_greater_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_y = 0x01;
+    cpu.memory[0x0001] = 0x02;
+    cpu.load(vec![0xd9, 0x00, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xc1_value_equal_to_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_x = 0x01;
+    cpu.memory[0x01] = 0x01;
+    cpu.load(vec![0xc1, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xc1_value_less_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x02;
+    cpu.register_x = 0x01;
+    cpu.memory[0x0001] = 0x01;
+    cpu.load(vec![0xc1, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xc1_value_greater_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_x = 0x01;
+    cpu.memory[0x0001] = 0x02;
+    cpu.memory[0x0002] = 0x03;
+    cpu.memory[0x0302] = 0x02;
+    cpu.load(vec![0xc1, 0x00, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xd1_value_equal_to_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_y = 0x01;
+    cpu.memory[0x01] = 0x02;
+    cpu.memory[0x02] = 0x03;
+    cpu.memory[0x0303] = 0x01;
+    cpu.load(vec![0xd1, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xd1_value_less_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x02;
+    cpu.register_y = 0x01;
+    cpu.memory[0x0001] = 0x02;
+    cpu.memory[0x0002] = 0x03;
+    cpu.memory[0x0303] = 0x01;
+    cpu.load(vec![0xd1, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cmp_0xd1_value_greater_than_accumulator() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_y = 0x01;
+    cpu.memory[0x0001] = 0x02;
+    cpu.memory[0x0002] = 0x03;
+    cpu.memory[0x0303] = 0x02;
+    cpu.load(vec![0xd1, 0x01, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpx_0xe0_value_equal_to_x() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_x = 0x01;
+    cpu.load(vec![0xe0, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpx_0xe0_value_less_than_x() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_x = 0x02;
+    cpu.load(vec![0xe0, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpx_0xe0_value_greater_than_x() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_x = 0x01;
+    cpu.load(vec![0xe0, 0x02, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpx_0xe4_value_equal_to_x() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_x = 0x01;
+    cpu.memory[0x01] = 0x01;
+    cpu.load(vec![0xe4, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpx_0xe4_value_less_than_x() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_x = 0x02;
+    cpu.memory[0x01] = 0x01;
+    cpu.load(vec![0xe4, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpx_0xe4_value_greater_than_x() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_x = 0x01;
+    cpu.memory[0x01] = 0x02;
+    cpu.load(vec![0xe4, 0x01, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpx_0xec_value_equal_to_x() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_x = 0x01;
+    cpu.memory[0x01] = 0x01;
+    cpu.memory[0x02] = 0x03;
+    cpu.load(vec![0xec, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpx_0xec_value_less_than_x() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_x = 0x02;
+    cpu.memory[0x01] = 0x01;
+    cpu.memory[0x02] = 0x03;
+    cpu.load(vec![0xec, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpx_0xec_value_greater_than_x() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_x = 0x01;
+    cpu.memory[0x01] = 0x02;
+    cpu.memory[0x02] = 0x03;
+    cpu.load(vec![0xec, 0x01, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpy_0xc0_value_equal_to_y() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x01;
+    cpu.load(vec![0xc0, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpy_0xc0_value_less_than_y() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x02;
+    cpu.load(vec![0xc0, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpy_0xc0_value_greater_than_y() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x01;
+    cpu.load(vec![0xc0, 0x02, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpy_0xc4_value_equal_to_y() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x01;
+    cpu.memory[0x01] = 0x01;
+    cpu.load(vec![0xc4, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpy_0xc4_value_less_than_y() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x02;
+    cpu.memory[0x01] = 0x01;
+    cpu.load(vec![0xc4, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpy_0xc4_value_greater_than_y() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x01;
+    cpu.memory[0x01] = 0x02;
+    cpu.load(vec![0xc4, 0x01, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpy_0xcc_value_equal_to_y() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x01;
+    cpu.memory[0x01] = 0x01;
+    cpu.memory[0x02] = 0x03;
+    cpu.load(vec![0xcc, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_cpy_0xcc_value_less_than_y() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x02;
+    cpu.memory[0x01] = 0x01;
+    cpu.memory[0x02] = 0x03;
+    cpu.load(vec![0xcc, 0x01, 0x00]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}

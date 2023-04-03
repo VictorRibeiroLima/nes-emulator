@@ -211,6 +211,9 @@ impl CPU {
                 Opcodes::CLV => {
                     self.status.remove(StatusFlags::OVERFLOW);
                 }
+                Opcodes::CMP(addr_mode) => self.compare(addr_mode, self.register_a),
+                Opcodes::CPX(addr_mode) => self.compare(addr_mode, self.register_x),
+                Opcodes::CPY(addr_mode) => self.compare(addr_mode, self.register_y),
                 Opcodes::LDA(addr_mode) => {
                     let value = self.get_value_from_memory(addr_mode);
                     self.set_register_a(value);
@@ -305,6 +308,18 @@ impl CPU {
         if condition {
             self.program_counter = self.program_counter.wrapping_add(offset as u16);
         }
+    }
+
+    fn compare(&mut self, mode: AddressingMode, value: u8) {
+        let mem_value = self.get_value_from_memory(mode);
+        let result = value.wrapping_sub(mem_value);
+        if value >= mem_value {
+            self.status.insert(StatusFlags::CARRY);
+        } else {
+            self.status.remove(StatusFlags::CARRY);
+        }
+        self.update_negative_flag(result);
+        self.update_zero_flag(result);
     }
 
     //This method will see the result of an operation and set the Z flag accordantly
