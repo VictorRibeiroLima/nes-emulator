@@ -137,6 +137,7 @@ impl CPU {
             let opcode_value = self.read_from_memory(self.program_counter);
             self.program_counter += 1;
             let opcode = Opcodes::from_u8(opcode_value).expect("Valid opcode");
+            println!("opcode: {:?}", opcode);
             match opcode {
                 Opcodes::ADC(_) => {
                     todo!();
@@ -169,7 +170,33 @@ impl CPU {
                         self.update_zero_flag(result);
                     }
                 }
-
+                Opcodes::BCC => {
+                    self.branch(!self.status.contains(StatusFlags::CARRY));
+                }
+                Opcodes::BCS => {
+                    self.branch(self.status.contains(StatusFlags::CARRY));
+                }
+                Opcodes::BEQ => {
+                    self.branch(self.status.contains(StatusFlags::ZERO));
+                }
+                Opcodes::BIT(_) => {
+                    todo!()
+                }
+                Opcodes::BMI => {
+                    self.branch(self.status.contains(StatusFlags::NEGATIVE));
+                }
+                Opcodes::BNE => {
+                    self.branch(!self.status.contains(StatusFlags::ZERO));
+                }
+                Opcodes::BPL => {
+                    self.branch(!self.status.contains(StatusFlags::NEGATIVE));
+                }
+                Opcodes::BVC => {
+                    self.branch(!self.status.contains(StatusFlags::OVERFLOW));
+                }
+                Opcodes::BVS => {
+                    self.branch(self.status.contains(StatusFlags::OVERFLOW));
+                }
                 Opcodes::LDA(addr_mode) => {
                     let value = self.get_value_from_memory(addr_mode);
                     self.set_register_a(value);
@@ -199,15 +226,6 @@ impl CPU {
                     let addr = self.get_memory_addr(addr_mode);
                     self.write_to_memory(addr, self.register_y);
                     self.program_counter += mode_increment;
-                }
-                Opcodes::BCS => {
-                    todo!();
-                }
-                Opcodes::BEQ => {
-                    todo!();
-                }
-                Opcodes::BIT(_) => {
-                    todo!();
                 }
                 Opcodes::TAX => {
                     let result = self.register_a;
@@ -265,6 +283,14 @@ impl CPU {
         let param = self.read_from_memory(addr);
         self.program_counter += mode_increment;
         return param;
+    }
+
+    fn branch(&mut self, condition: bool) {
+        let offset = self.read_from_memory(self.program_counter);
+        self.program_counter += 1;
+        if condition {
+            self.program_counter = self.program_counter.wrapping_add(offset as u16);
+        }
     }
 
     //This method will see the result of an operation and set the Z flag accordantly
@@ -846,5 +872,85 @@ mod test {
         assert!(!cpu.status.contains(StatusFlags::CARRY));
         assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
         assert!(!cpu.status.contains(StatusFlags::ZERO));
+    }
+
+    #[test]
+    fn test_bcc_0x90_carry_flag_set() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x8000;
+        cpu.status.insert(StatusFlags::CARRY);
+        cpu.load(vec![0x90, 0x02, 0xa9, 0xaa, 0x00]);
+        cpu.run();
+        assert!(cpu.register_a == 0xaa); //set. instruction was executed
+    }
+
+    #[test]
+    fn test_bcc_0x90_carry_flag_not_set() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x8000;
+        cpu.status.remove(StatusFlags::CARRY);
+        cpu.load(vec![0x90, 0x02, 0xa9, 0xaa, 0x00]);
+        cpu.run();
+        assert!(cpu.register_a == 0x00); //not set. instruction jumped over
+    }
+
+    #[test]
+    fn test_bcs_0xb0_carry_flag_set() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x8000;
+        cpu.status.insert(StatusFlags::CARRY);
+        cpu.load(vec![0xb0, 0x02, 0xa9, 0xaa, 0x00]);
+        cpu.run();
+        assert!(cpu.register_a == 0x00); //not set. instruction jumped over
+    }
+
+    #[test]
+    fn test_bcs_0xb0_carry_flag_not_set() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x8000;
+        cpu.status.remove(StatusFlags::CARRY);
+        cpu.load(vec![0xb0, 0x02, 0xa9, 0xaa, 0x00]);
+        cpu.run();
+        assert!(cpu.register_a == 0xaa); //set. instruction was executed
+    }
+
+    #[test]
+    fn test_beq_0xf0_zero_flag_set() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x8000;
+        cpu.status.insert(StatusFlags::ZERO);
+        cpu.load(vec![0xf0, 0x02, 0xa9, 0xaa, 0x00]);
+        cpu.run();
+        assert!(cpu.register_a == 0x00); //not set. instruction jumped over
+    }
+
+    #[test]
+    fn test_beq_0xf0_zero_flag_not_set() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x8000;
+        cpu.status.remove(StatusFlags::ZERO);
+        cpu.load(vec![0xf0, 0x02, 0xa9, 0xaa, 0x00]);
+        cpu.run();
+        assert!(cpu.register_a == 0xaa); //set. instruction was executed
+    }
+
+    #[test]
+    fn test_bmi_0x30_negative_flag_set() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x8000;
+        cpu.status.insert(StatusFlags::NEGATIVE);
+        cpu.load(vec![0x30, 0x02, 0xa9, 0xaa, 0x00]);
+        cpu.run();
+        assert!(cpu.register_a == 0x00); //not set. instruction jumped over
+    }
+
+    #[test]
+    fn test_bmi_0x30_negative_flag_not_set() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x8000;
+        cpu.status.remove(StatusFlags::NEGATIVE);
+        cpu.load(vec![0x30, 0x02, 0xa9, 0xaa, 0x00]);
+        cpu.run();
+        assert!(cpu.register_a == 0xaa); //set. instruction was executed
     }
 }
