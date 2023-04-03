@@ -1,3 +1,4 @@
+#[cfg(test)]
 macro_rules! test_opcodes {
     ($opcode:ident,$value:expr,$mode:ident,$test_name:ident) => {
         #[test]
