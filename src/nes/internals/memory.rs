@@ -1,7 +1,9 @@
+use std::borrow::Borrow;
+
 use super::opcodes::AddressingMode;
 
 pub trait Memory {
-    fn get_memory_addr(&self, mode: AddressingMode) -> u16;
+    fn get_memory_addr<T: Borrow<AddressingMode>>(&self, mode: T) -> u16;
 
     fn read_from_memory(&self, addr: u16) -> u8;
 
@@ -31,6 +33,8 @@ pub trait Memory {
 
 #[cfg(test)]
 mod test {
+    use std::borrow::Borrow;
+
     use super::Memory;
 
     struct Cpu {
@@ -38,7 +42,10 @@ mod test {
     }
 
     impl Memory for Cpu {
-        fn get_memory_addr(&self, _mode: crate::nes::internals::opcodes::AddressingMode) -> u16 {
+        fn get_memory_addr<T: Borrow<crate::nes::internals::opcodes::AddressingMode>>(
+            &self,
+            _mode: T,
+        ) -> u16 {
             return 0;
         }
         fn read_from_memory(&self, addr: u16) -> u8 {
