@@ -546,3 +546,83 @@ fn test_bmi_0x30_negative_flag_not_set() {
     cpu.run();
     assert!(cpu.register_a == 0xaa); //set. instruction was executed
 }
+
+#[test]
+fn test_bne_0xd0_zero_flag_set() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status.insert(StatusFlags::ZERO);
+    cpu.load(vec![0xd0, 0x02, 0xa9, 0xaa, 0x00]);
+    cpu.run();
+    assert!(cpu.register_a == 0xaa); //set. instruction was executed
+}
+
+#[test]
+fn test_bne_0xd0_zero_flag_not_set() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status.remove(StatusFlags::ZERO);
+    cpu.load(vec![0xd0, 0x02, 0xa9, 0xaa, 0x00]);
+    cpu.run();
+    assert!(cpu.register_a == 0x00); //not set. instruction jumped over
+}
+
+#[test]
+fn test_bpl_0x10_negative_flag_set() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status.insert(StatusFlags::NEGATIVE);
+    cpu.load(vec![0x10, 0x02, 0xa9, 0xaa, 0x00]);
+    cpu.run();
+    assert!(cpu.register_a == 0xaa); //set. instruction was executed
+}
+
+#[test]
+fn test_bpl_0x10_negative_flag_not_set() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status.remove(StatusFlags::NEGATIVE);
+    cpu.load(vec![0x10, 0x02, 0xa9, 0xaa, 0x00]);
+    cpu.run();
+    assert!(cpu.register_a == 0x00); //not set. instruction jumped over
+}
+
+#[test]
+fn test_bvc_0x50_overflow_flag_set() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status.insert(StatusFlags::OVERFLOW);
+    cpu.load(vec![0x50, 0x02, 0xa9, 0xaa, 0x00]);
+    cpu.run();
+    assert!(cpu.register_a == 0xaa); //set. instruction was executed
+}
+
+#[test]
+fn test_bvc_0x50_overflow_flag_not_set() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status.remove(StatusFlags::OVERFLOW);
+    cpu.load(vec![0x50, 0x02, 0xa9, 0xaa, 0x00]);
+    cpu.run();
+    assert!(cpu.register_a == 0x00); //not set. instruction jumped over
+}
+
+#[test]
+fn test_bvs_0x70_overflow_flag_set() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status.insert(StatusFlags::OVERFLOW);
+    cpu.load(vec![0x70, 0x02, 0xa9, 0xaa, 0x00]);
+    cpu.run();
+    assert!(cpu.register_a == 0x00); //not set. instruction jumped over
+}
+
+#[test]
+fn test_bvs_0x70_overflow_flag_not_set() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status.remove(StatusFlags::OVERFLOW);
+    cpu.load(vec![0x70, 0x02, 0xa9, 0xaa, 0x00]);
+    cpu.run();
+    assert!(cpu.register_a == 0xaa); //set. instruction was executed
+}
