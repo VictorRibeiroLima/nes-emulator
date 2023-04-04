@@ -1218,3 +1218,91 @@ fn test_cpy_0xcc_value_less_than_y() {
     assert!(!cpu.status.contains(StatusFlags::ZERO));
     assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
 }
+
+#[test]
+fn test_cpy_0xcc_value_greater_than_y() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x01;
+    cpu.memory[0x01] = 0x02;
+    cpu.memory[0x02] = 0x03;
+    cpu.load(vec![0xcc, 0x01, 0x00]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_dec_0xc6() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.memory[0x01] = 0x01;
+    cpu.load(vec![0xc6, 0x01, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.memory[0x01], 0x00);
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_dec_0xd6() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_x = 0x01;
+    cpu.memory[0x02] = 0x01;
+    cpu.load(vec![0xd6, 0x01, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.memory[0x02], 0x00);
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_dec_0xce() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.memory[0x01] = 0x01;
+    cpu.load(vec![0xce, 0x01, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.memory[0x01], 0x00);
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_dec_0xde() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_x = 0x01;
+    cpu.memory[0x02] = 0x01;
+    cpu.load(vec![0xde, 0x01, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.memory[0x02], 0x00);
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_dex_0xca() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_x = 0x01;
+    cpu.load(vec![0xca]);
+    cpu.run();
+    assert_eq!(cpu.register_x, 0x00);
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_dey_0x88() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x01;
+    cpu.load(vec![0x88]);
+    cpu.run();
+    assert_eq!(cpu.register_y, 0x00);
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}

@@ -214,6 +214,24 @@ impl CPU {
                 Opcodes::CMP(addr_mode) => self.compare(addr_mode, self.register_a),
                 Opcodes::CPX(addr_mode) => self.compare(addr_mode, self.register_x),
                 Opcodes::CPY(addr_mode) => self.compare(addr_mode, self.register_y),
+                Opcodes::DEC(addr_mode) => {
+                    let addr = self.get_memory_addr(&addr_mode);
+                    let value = self.get_value_from_memory(addr_mode);
+                    let result = value.wrapping_sub(1);
+                    self.write_to_memory(addr, result);
+                    self.update_negative_flag(result);
+                    self.update_zero_flag(result);
+                }
+                Opcodes::DEX => {
+                    let value = self.register_x;
+                    let result = value.wrapping_sub(1);
+                    self.set_register_x(result);
+                }
+                Opcodes::DEY => {
+                    let value = self.register_y;
+                    let result = value.wrapping_sub(1);
+                    self.set_register_y(result);
+                }
                 Opcodes::LDA(addr_mode) => {
                     let value = self.get_value_from_memory(addr_mode);
                     self.set_register_a(value);
