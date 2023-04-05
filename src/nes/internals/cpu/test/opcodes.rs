@@ -1306,3 +1306,116 @@ fn test_dey_0x88() {
     assert!(cpu.status.contains(StatusFlags::ZERO));
     assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
 }
+
+#[test]
+fn test_eor_0x49() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x03;
+    cpu.load(vec![0x49, 0x01]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x02);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_eor_0x45() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x03;
+    cpu.memory[0x01] = 0x01;
+    cpu.load(vec![0x45, 0x01]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x02);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_eor_0x55() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x03;
+    cpu.register_x = 0x01;
+    cpu.memory[0x02] = 0x01;
+    cpu.load(vec![0x55, 0x01]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x02);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_eor_0x4d() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x03;
+    cpu.memory[0x0201] = 0x01;
+    cpu.load(vec![0x4d, 0x01, 0x02]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x02);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_eor_0x5d() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x03;
+    cpu.register_x = 0x01;
+    cpu.memory[0x0202] = 0x01;
+    cpu.load(vec![0x5d, 0x01, 0x02]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x02);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_eor_0x59() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x03;
+    cpu.register_y = 0x01;
+    cpu.memory[0x0202] = 0x01;
+    cpu.load(vec![0x59, 0x01, 0x02]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x02);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_eor_0x41() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x03;
+    cpu.register_x = 0x01;
+    cpu.memory[0x02] = 0x01;
+    cpu.memory[0x01] = 0x01;
+    cpu.memory[0x0201] = 0x01;
+    cpu.load(vec![0x41, 0x01]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x02);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_eor_0x51() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x03;
+    cpu.register_x = 0x01;
+    cpu.register_y = 0x01;
+    cpu.memory[0x02] = 0x01;
+    cpu.memory[0x01] = 0x01;
+    cpu.memory[0x0102] = 0x01;
+    cpu.load(vec![0x51, 0x01]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x02);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}

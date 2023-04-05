@@ -232,6 +232,11 @@ impl CPU {
                     let result = value.wrapping_sub(1);
                     self.set_register_y(result);
                 }
+                Opcodes::EOR(addr_mode) => {
+                    let value = self.get_value_from_memory(addr_mode);
+                    let result = self.register_a ^ value;
+                    self.set_register_a(result);
+                }
                 Opcodes::LDA(addr_mode) => {
                     let value = self.get_value_from_memory(addr_mode);
                     self.set_register_a(value);
