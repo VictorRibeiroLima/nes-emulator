@@ -274,6 +274,26 @@ impl CPU {
                     let value = self.get_value_from_memory(addr_mode);
                     self.set_register_y(value);
                 }
+                Opcodes::LSR(addr_mode) => {
+                    let value: u8;
+                    if addr_mode == AddressingMode::ACCUMULATOR {
+                        value = self.register_a;
+                        let result = value >> 1;
+                        self.set_register_a(result);
+                    } else {
+                        let addr = self.get_memory_addr(&addr_mode);
+                        value = self.get_value_from_memory(addr_mode);
+                        let result = value >> 1;
+                        self.write_to_memory(addr, result);
+                        self.update_negative_flag(result);
+                        self.update_zero_flag(result);
+                    }
+                    if value & 0x01 == 0x01 {
+                        self.status.insert(StatusFlags::CARRY);
+                    } else {
+                        self.status.remove(StatusFlags::CARRY);
+                    }
+                }
                 Opcodes::STA(addr_mode) => {
                     let mode_increment = addr_mode.get_counter_increment();
                     let addr = self.get_memory_addr(addr_mode);
