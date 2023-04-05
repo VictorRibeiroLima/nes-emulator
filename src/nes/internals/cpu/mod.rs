@@ -256,6 +256,12 @@ impl CPU {
                     self.update_negative_flag(result);
                     self.update_zero_flag(result);
                 }
+                Opcodes::JMP(_) => {
+                    todo!()
+                }
+                Opcodes::JSR(_) => {
+                    todo!()
+                }
                 Opcodes::LDA(addr_mode) => {
                     let value = self.get_value_from_memory(addr_mode);
                     self.set_register_a(value);
