@@ -1,5 +1,5 @@
 use crate::nes::internals::{
-    cpu::{StatusFlags, CPU},
+    cpu::{StatusFlags, CPU, STACK_SIZE},
     memory::Memory,
 };
 
@@ -1802,4 +1802,42 @@ fn test_ora_0x11() {
     assert_eq!(cpu.register_a, 0x03);
     assert!(!cpu.status.contains(StatusFlags::ZERO));
     assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_pha_0x48_empty_stack() {
+    let mut cpu = CPU::new();
+    assert!(cpu.stack_pointer == STACK_SIZE);
+    cpu.load_and_run(vec![
+        0xA9, 0xe0, 0x48, 0xA0, 0xbb, 0x98, 0x48, 0xA2, 0x01, 0x8A, 0x48,
+    ]);
+    /*
+       LDA #$e0
+       PHA
+       LDY #$bb
+       TYA
+       PHA
+       LDX #$01
+       TXA
+       PHA
+    */
+    assert!(cpu.stack_pointer == 0xfc);
+    assert!(cpu.memory[0x01ff] == 0xe0);
+    assert!(cpu.memory[0x01fe] == 0xbb);
+    assert!(cpu.memory[0x01fd] == 0x01);
+}
+
+#[test]
+fn test_pha_0x48_full_stack() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.stack_pointer = 0x00;
+    cpu.load(vec![0xA9, 0xe0, 0x48]);
+    /*
+        LDA #$e0
+        PHA
+    */
+    cpu.run();
+    assert!(cpu.stack_pointer == 0xff);
+    assert!(cpu.memory[0x0100] == 0xe0);
 }

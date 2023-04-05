@@ -23,17 +23,21 @@ bitflags!(
     }
 );
 
+const STACK_BASE: u16 = 0x0100;
+const STACK_SIZE: u8 = 0x00FF;
+
 pub struct CPU {
-    pub register_a: u8,
-    pub register_x: u8,
-    pub register_y: u8,
+    register_a: u8,
+    register_x: u8,
+    register_y: u8,
     /* 8-bit register represents 7 status flags that can be set or unset depending on the result of the last executed instruction.
     (for example Z flag is set (1) if the result of an operation is 0, and is unset/erased (0) otherwise)
       0b0000_0000
         nvbb_dizc
     */
-    pub status: StatusFlags,
-    pub program_counter: u16,
+    status: StatusFlags,
+    program_counter: u16,
+    stack_pointer: u8,
     memory: [u8; 0xFFFF],
 }
 
@@ -107,6 +111,7 @@ impl CPU {
             register_y: 0,
             status: StatusFlags::empty(),
             program_counter: 0,
+            stack_pointer: STACK_SIZE, //0x0100 - 0x01ff is used for the stack
             memory: [0; 0xFFFF],
         }
     }
@@ -124,6 +129,7 @@ impl CPU {
         self.register_x = 0;
         self.register_y = 0;
         self.status = StatusFlags::empty();
+        self.stack_pointer = STACK_SIZE;
 
         //reads the addr of the beginning of the loaded program
         self.program_counter = self.read_from_memory_le(0xFFFC);
@@ -300,6 +306,10 @@ impl CPU {
                     let result = self.register_a | value;
                     self.set_register_a(result);
                 }
+                Opcodes::PHA => {
+                    let value = self.register_a;
+                    self.stack_push(value);
+                }
                 Opcodes::STA(addr_mode) => {
                     let mode_increment = addr_mode.get_counter_increment();
                     let addr = self.get_memory_addr(addr_mode);
@@ -327,6 +337,18 @@ impl CPU {
                 Opcodes::TAY => {
                     let result = self.register_a;
                     self.register_y = result;
+                    self.update_negative_flag(result);
+                    self.update_zero_flag(result);
+                }
+                Opcodes::TXA => {
+                    let result = self.register_x;
+                    self.register_a = result;
+                    self.update_negative_flag(result);
+                    self.update_zero_flag(result);
+                }
+                Opcodes::TYA => {
+                    let result = self.register_y;
+                    self.register_a = result;
                     self.update_negative_flag(result);
                     self.update_zero_flag(result);
                 }
@@ -404,5 +426,46 @@ impl CPU {
             //if the result 7's bit not is set than it's a positive value and the flag must be unset
             self.status.remove(StatusFlags::NEGATIVE);
         }
+    }
+
+    fn stack_push(&mut self, value: u8) {
+        /*  on an empty stack the pointer is at 0x00FF.
+           on this case adding base to the pointer will result in 0x01FF which is the first address of the stack
+        */
+        let addr = STACK_BASE + (self.stack_pointer) as u16;
+        self.write_to_memory(addr, value);
+
+        /*when the pointer reaches 0x00 it will overflow and start at 0xFF.
+        this is not necessarily a problem.
+        because the pointer starts at 0xff and not on 0x01ff.
+        the stack access logic for pushing is to write then decrement the pointer,so we can effectively write at 0x1ff.
+        this causes the behavior that when we write at 0x0100, the pointer will overflow and start at 0xFF.
+
+        but nonetheless, we need to check for overflow and warn the user if it happens just for debugging weird behavior.
+         */
+        let (pointer, overflowed) = self.stack_pointer.overflowing_sub(1);
+        self.stack_pointer = pointer;
+        if overflowed {
+            println!("Warning: Stack overflow on next push");
+        }
+    }
+
+    fn stack_pop(&mut self) -> u8 {
+        /*when the pointer reaches 0xFF it will underflow and start at 0x00.
+        this is not necessarily a problem.
+        after writhing at 0x0100, the pointer will overflow and start at 0xFF.
+        we need to compensate for this by incrementing the pointer before reading from the stack so we can read from addr 0x0100.
+
+        but nonetheless, we need to check for underflow and warn the user if it happens just for debugging weird behavior.
+         */
+        let (pointer, overflowed) = self.stack_pointer.overflowing_add(1);
+        self.stack_pointer = pointer;
+        if overflowed {
+            println!("Warning: Stack underflow on next pop");
+        }
+
+        let addr = STACK_BASE + (self.stack_pointer) as u16;
+        let result = self.read_from_memory(addr);
+        return result;
     }
 }
