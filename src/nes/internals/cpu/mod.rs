@@ -245,6 +245,17 @@ impl CPU {
                     self.update_negative_flag(result);
                     self.update_zero_flag(result);
                 }
+                Opcodes::INX => {
+                    let value = self.register_x;
+                    let result = value.wrapping_add(1);
+                    self.set_register_x(result);
+                }
+                Opcodes::INY => {
+                    let result = self.register_y.wrapping_add(1);
+                    self.register_y = result;
+                    self.update_negative_flag(result);
+                    self.update_zero_flag(result);
+                }
                 Opcodes::LDA(addr_mode) => {
                     let value = self.get_value_from_memory(addr_mode);
                     self.set_register_a(value);
@@ -283,18 +294,6 @@ impl CPU {
                 }
                 Opcodes::TAY => {
                     let result = self.register_a;
-                    self.register_y = result;
-                    self.update_negative_flag(result);
-                    self.update_zero_flag(result);
-                }
-                Opcodes::INX => {
-                    let result = self.register_x.wrapping_add(1);
-                    self.register_x = result;
-                    self.update_negative_flag(result);
-                    self.update_zero_flag(result);
-                }
-                Opcodes::INY => {
-                    let result = self.register_y.wrapping_add(1);
                     self.register_y = result;
                     self.update_negative_flag(result);
                     self.update_zero_flag(result);
