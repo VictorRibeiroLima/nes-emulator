@@ -237,6 +237,14 @@ impl CPU {
                     let result = self.register_a ^ value;
                     self.set_register_a(result);
                 }
+                Opcodes::INC(addr_mode) => {
+                    let addr = self.get_memory_addr(&addr_mode);
+                    let value = self.get_value_from_memory(addr_mode);
+                    let result = value.wrapping_add(1);
+                    self.write_to_memory(addr, result);
+                    self.update_negative_flag(result);
+                    self.update_zero_flag(result);
+                }
                 Opcodes::LDA(addr_mode) => {
                     let value = self.get_value_from_memory(addr_mode);
                     self.set_register_a(value);
