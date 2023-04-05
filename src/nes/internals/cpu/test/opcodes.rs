@@ -1954,3 +1954,18 @@ fn test_nes_dev_example() {
     assert!(cpu.register_a == 0xe0);
     //end _popstack
 }
+
+#[test]
+fn test_plp_0x28() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.stack_pointer = 0xfe;
+    cpu.memory[0x01ff] = 0b1101_0001;
+    cpu.load(vec![0x28]);
+    cpu.run();
+    assert!(cpu.stack_pointer == 0xff);
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+    assert!(cpu.status.contains(StatusFlags::OVERFLOW));
+    assert!(cpu.status.contains(StatusFlags::BREAK));
+}
