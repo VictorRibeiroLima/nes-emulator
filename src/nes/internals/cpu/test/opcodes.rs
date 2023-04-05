@@ -1841,3 +1841,15 @@ fn test_pha_0x48_full_stack() {
     assert!(cpu.stack_pointer == 0xff);
     assert!(cpu.memory[0x0100] == 0xe0);
 }
+
+#[test]
+fn test_php_0x08() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.status =
+        StatusFlags::CARRY | StatusFlags::NEGATIVE | StatusFlags::OVERFLOW | StatusFlags::BREAK;
+    cpu.load(vec![0x08]);
+    cpu.run();
+    assert!(cpu.stack_pointer == 0xfe);
+    assert!(cpu.memory[0x1ff] == 0b1101_0001);
+}

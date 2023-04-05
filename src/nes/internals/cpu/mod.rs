@@ -310,6 +310,10 @@ impl CPU {
                     let value = self.register_a;
                     self.stack_push(value);
                 }
+                Opcodes::PHP => {
+                    let value = self.status.bits();
+                    self.stack_push(value);
+                }
                 Opcodes::STA(addr_mode) => {
                     let mode_increment = addr_mode.get_counter_increment();
                     let addr = self.get_memory_addr(addr_mode);
