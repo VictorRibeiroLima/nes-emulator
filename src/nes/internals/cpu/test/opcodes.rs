@@ -1853,3 +1853,104 @@ fn test_php_0x08() {
     assert!(cpu.stack_pointer == 0xfe);
     assert!(cpu.memory[0x1ff] == 0b1101_0001);
 }
+
+#[test]
+fn test_pla_0x68_empty_stack() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.stack_pointer = 0xfe;
+    cpu.memory[0x01ff] = 0x01;
+    cpu.load(vec![0x68]);
+    cpu.run();
+    assert!(cpu.stack_pointer == 0xff);
+    assert!(cpu.register_a == 0x01);
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+}
+
+#[test]
+fn test_pla_0x68_full_stack() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.stack_pointer = 0xff;
+    cpu.memory[0x0100] = 0x01;
+    cpu.load(vec![0x68]);
+    cpu.run();
+    assert!(cpu.stack_pointer == 0x00);
+    assert!(cpu.register_a == 0x01);
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+}
+
+//example reproduction from https://www.nesdev.org/wiki/Stack#:~:text=Many%20NES%20programs%20use%20a,-%2401FF%20for%20the%20stack.
+#[test]
+fn test_nes_dev_example() {
+    let mut cpu = CPU::new();
+
+    //_pushstack:
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0xA2, 0xff, 0x00]); //LDX #$ff
+    cpu.run();
+    assert!(cpu.register_x == 0xff);
+
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0xA9, 0xe0, 0x00]); //LDA #$e0
+    cpu.run();
+    assert!(cpu.register_a == 0xe0);
+
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0x48, 0x00]); //PHA
+    cpu.run();
+    assert!(cpu.stack_pointer == 0xfe);
+    assert!(cpu.memory[0x01ff] == 0xe0);
+
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0xa0, 0xbb, 0x00]); //LDY #$bb
+    cpu.run();
+    assert!(cpu.register_y == 0xbb);
+
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0x98, 0x00]); //TYA
+    cpu.run();
+    assert!(cpu.register_a == 0xbb);
+
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0x48, 0x00]); //PHA
+    cpu.run();
+    assert!(cpu.stack_pointer == 0xfd);
+    assert!(cpu.memory[0x01fe] == 0xbb);
+
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0x8a, 0x00]); //TXA
+    cpu.run();
+    assert!(cpu.register_a == 0xff);
+
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0x48, 0x00]); //PHA
+    cpu.run();
+    assert!(cpu.stack_pointer == 0xfc);
+    assert!(cpu.memory[0x01fd] == 0xff);
+    //end _pushstack
+
+    //_popstack:
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0x68, 0xAA, 0x00]); //PLA, TAX
+    cpu.run();
+    assert!(cpu.stack_pointer == 0xfd);
+    assert!(cpu.register_a == 0xff);
+    assert!(cpu.register_x == 0xff);
+
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0x68, 0xA8, 0x00]); //PLA, TAY
+    cpu.run();
+    assert!(cpu.stack_pointer == 0xfe);
+    assert!(cpu.register_a == 0xbb);
+    assert!(cpu.register_y == 0xbb);
+
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0x68, 0x00]); //PLA
+    cpu.run();
+    assert!(cpu.stack_pointer == 0xff);
+    assert!(cpu.register_a == 0xe0);
+    //end _popstack
+}

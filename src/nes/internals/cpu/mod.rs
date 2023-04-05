@@ -314,6 +314,10 @@ impl CPU {
                     let value = self.status.bits();
                     self.stack_push(value);
                 }
+                Opcodes::PLA => {
+                    let value = self.stack_pop();
+                    self.set_register_a(value);
+                }
                 Opcodes::STA(addr_mode) => {
                     let mode_increment = addr_mode.get_counter_increment();
                     let addr = self.get_memory_addr(addr_mode);
