@@ -295,6 +295,11 @@ impl CPU {
                     }
                 }
                 Opcodes::NOP => {}
+                Opcodes::ORA(addr_mode) => {
+                    let value = self.get_value_from_memory(addr_mode);
+                    let result = self.register_a | value;
+                    self.set_register_a(result);
+                }
                 Opcodes::STA(addr_mode) => {
                     let mode_increment = addr_mode.get_counter_increment();
                     let addr = self.get_memory_addr(addr_mode);

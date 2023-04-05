@@ -1690,3 +1690,116 @@ fn test_nop_0xea() {
     assert_eq!(cpu.register_x, 0x02);
     assert_eq!(cpu.register_y, 0x03);
 }
+
+#[test]
+fn test_ora_0x09() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.load(vec![0x09, 0x02]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x03);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_ora_0x05() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.memory[0x02] = 0x02;
+    cpu.load(vec![0x05, 0x02]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x03);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_ora_0x15() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_x = 0x01;
+    cpu.memory[0x03] = 0x02;
+    cpu.load(vec![0x15, 0x02]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x03);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_ora_0x0d() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.memory[0x0201] = 0x02;
+    cpu.load(vec![0x0d, 0x01, 0x02]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x03);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_ora_0x1d() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_x = 0x01;
+    cpu.memory[0x0202] = 0x02;
+    cpu.load(vec![0x1d, 0x01, 0x02]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x03);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_ora_0x19() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_y = 0x01;
+    cpu.memory[0x0202] = 0x02;
+    cpu.load(vec![0x19, 0x01, 0x02]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x03);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_ora_0x01() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_x = 0x01;
+    cpu.memory[0x02] = 0x02;
+    cpu.memory[0x03] = 0x03;
+    cpu.memory[0x04] = 0x02;
+    cpu.memory[0x0203] = 0x02;
+    cpu.load(vec![0x01, 0x02]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x03);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_ora_0x11() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_y = 0x01;
+    cpu.memory[0x02] = 0x02;
+    cpu.memory[0x03] = 0x03;
+    cpu.memory[0x0303] = 0x02;
+    cpu.load(vec![0x11, 0x02]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x03);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
