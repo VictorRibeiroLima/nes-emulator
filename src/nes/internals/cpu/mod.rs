@@ -294,6 +294,7 @@ impl CPU {
                         self.status.remove(StatusFlags::CARRY);
                     }
                 }
+                Opcodes::NOP => {}
                 Opcodes::STA(addr_mode) => {
                     let mode_increment = addr_mode.get_counter_increment();
                     let addr = self.get_memory_addr(addr_mode);

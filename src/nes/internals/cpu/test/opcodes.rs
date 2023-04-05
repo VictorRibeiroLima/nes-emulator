@@ -1675,3 +1675,18 @@ fn test_lsr_0x5e_unset_carry() {
     assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
     assert!(!cpu.status.contains(StatusFlags::CARRY));
 }
+
+#[test]
+fn test_nop_0xea() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.register_x = 0x02;
+    cpu.register_y = 0x03;
+    cpu.load(vec![0xea, 0xea, 0xea]);
+    cpu.run();
+    assert_eq!(cpu.program_counter, 0x8004);
+    assert_eq!(cpu.register_a, 0x01);
+    assert_eq!(cpu.register_x, 0x02);
+    assert_eq!(cpu.register_y, 0x03);
+}
