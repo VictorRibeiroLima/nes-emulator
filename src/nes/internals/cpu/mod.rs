@@ -416,11 +416,19 @@ impl CPU {
                     self.update_negative_flag(result);
                     self.update_zero_flag(result);
                 }
+                Opcodes::TSX => {
+                    let result = self.stack_pointer;
+                    self.set_register_x(result);
+                }
                 Opcodes::TXA => {
                     let result = self.register_x;
                     self.register_a = result;
                     self.update_negative_flag(result);
                     self.update_zero_flag(result);
+                }
+                Opcodes::TXS => {
+                    let result = self.register_x;
+                    self.stack_pointer = result;
                 }
                 Opcodes::TYA => {
                     let result = self.register_y;
@@ -429,9 +437,9 @@ impl CPU {
                     self.update_zero_flag(result);
                 }
                 Opcodes::BRK => {
+                    //todo!()
                     break;
                 }
-                _ => todo!(),
             }
         }
     }
