@@ -2798,3 +2798,37 @@ fn test_stx_0x8e() {
     assert!(cpu.memory[0x0000] == 0x42);
     assert!(cpu.program_counter == 0x8004);
 }
+
+#[test]
+fn test_sty_0x84() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x42;
+    cpu.load(vec![0x84, 0x00]);
+    cpu.run();
+    assert!(cpu.memory[0x0000] == 0x42);
+    assert!(cpu.program_counter == 0x8003);
+}
+
+#[test]
+fn test_sty_0x94() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x42;
+    cpu.register_x = 0x01;
+    cpu.load(vec![0x94, 0x00]);
+    cpu.run();
+    assert!(cpu.memory[0x0001] == 0x42);
+    assert!(cpu.program_counter == 0x8003);
+}
+
+#[test]
+fn test_sty_0x8c() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x42;
+    cpu.load(vec![0x8c, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.memory[0x0000] == 0x42);
+    assert!(cpu.program_counter == 0x8004);
+}
