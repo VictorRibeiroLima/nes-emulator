@@ -322,6 +322,29 @@ impl CPU {
                     let value = self.stack_pop();
                     self.status = StatusFlags::from_bits_truncate(value);
                 }
+                Opcodes::ROL(addr_mode) => {
+                    let value: u8;
+                    // true turns into 0x1, false turns into 0x0
+                    let carry_bit = self.status.contains(StatusFlags::CARRY) as u8;
+                    if addr_mode == AddressingMode::ACCUMULATOR {
+                        value = self.register_a;
+                        // a shift left always leaves a 0 on the 0 bit, so we can just OR it with the carry bit
+                        let result = (value << 1) | carry_bit;
+                        self.set_register_a(result);
+                    } else {
+                        let addr = self.get_memory_addr(&addr_mode);
+                        value = self.get_value_from_memory(addr_mode);
+                        let result = (value << 1) | carry_bit;
+                        self.write_to_memory(addr, result);
+                        self.update_negative_flag(result);
+                        self.update_zero_flag(result);
+                    }
+                    if value & 0x80 == 0x80 {
+                        self.status.insert(StatusFlags::CARRY);
+                    } else {
+                        self.status.remove(StatusFlags::CARRY);
+                    }
+                }
                 Opcodes::STA(addr_mode) => {
                     let mode_increment = addr_mode.get_counter_increment();
                     let addr = self.get_memory_addr(addr_mode);
