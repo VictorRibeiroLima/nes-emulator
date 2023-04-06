@@ -2649,3 +2649,30 @@ fn test_ror_0x7e_negative() {
     assert!(cpu.status.contains(StatusFlags::NEGATIVE));
     assert!(!cpu.status.contains(StatusFlags::ZERO));
 }
+
+#[test]
+fn test_sec() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0x38]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+}
+
+#[test]
+fn test_sed() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0xf8]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::DECIMAL_MODE));
+}
+
+#[test]
+fn test_sei() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0x78]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::INTERRUPT_DISABLE));
+}

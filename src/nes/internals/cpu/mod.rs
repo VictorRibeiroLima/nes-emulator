@@ -377,6 +377,15 @@ impl CPU {
                 Opcodes::SBC(_) => {
                     todo!()
                 }
+                Opcodes::SEC => {
+                    self.status.insert(StatusFlags::CARRY);
+                }
+                Opcodes::SED => {
+                    self.status.insert(StatusFlags::DECIMAL_MODE);
+                }
+                Opcodes::SEI => {
+                    self.status.insert(StatusFlags::INTERRUPT_DISABLE);
+                }
                 Opcodes::STA(addr_mode) => {
                     let mode_increment = addr_mode.get_counter_increment();
                     let addr = self.get_memory_addr(addr_mode);
