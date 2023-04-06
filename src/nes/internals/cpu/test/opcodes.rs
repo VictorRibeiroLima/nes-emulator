@@ -2676,3 +2676,91 @@ fn test_sei() {
     cpu.run();
     assert!(cpu.status.contains(StatusFlags::INTERRUPT_DISABLE));
 }
+
+#[test]
+fn test_sta_0x85() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x42;
+    cpu.load(vec![0x85, 0x00]);
+    cpu.run();
+    assert!(cpu.memory[0x0000] == 0x42);
+    assert!(cpu.program_counter == 0x8003);
+}
+
+#[test]
+fn test_sta_0x95() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x42;
+    cpu.register_x = 0x01;
+    cpu.load(vec![0x95, 0x00]);
+    cpu.run();
+    assert!(cpu.memory[0x0001] == 0x42);
+    assert!(cpu.program_counter == 0x8003);
+}
+
+#[test]
+fn test_sta_0x8d() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x42;
+    cpu.load(vec![0x8d, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.memory[0x0000] == 0x42);
+    assert!(cpu.program_counter == 0x8004);
+}
+
+#[test]
+fn test_sta_0x9d() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x42;
+    cpu.register_x = 0x01;
+    cpu.load(vec![0x9d, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.memory[0x0001] == 0x42);
+    assert!(cpu.program_counter == 0x8004);
+}
+
+#[test]
+fn test_sta_0x99() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x42;
+    cpu.register_y = 0x01;
+    cpu.load(vec![0x99, 0x00, 0x00]);
+    cpu.run();
+    assert!(cpu.memory[0x0001] == 0x42);
+    assert!(cpu.program_counter == 0x8004);
+}
+
+#[test]
+fn test_sta_0x81() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x42;
+    cpu.register_x = 0x01;
+    cpu.memory[0x02] = 0x02;
+    cpu.memory[0x03] = 0x03;
+    cpu.memory[0x0302] = 0x00;
+    cpu.load(vec![0x81, 0x01]);
+    cpu.run();
+    assert!(cpu.memory[0x0302] == 0x42);
+    assert!(cpu.program_counter == 0x8003);
+}
+
+#[test]
+fn test_sta_0x91() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x42;
+    cpu.register_y = 0x01;
+    cpu.memory[0x01] = 0x01;
+    cpu.memory[0x02] = 0x02;
+    cpu.memory[0x0202] = 0x00;
+    cpu.load(vec![0x91, 0x01]);
+    cpu.run();
+    assert!(cpu.memory[0x0202] == 0x42);
+    assert!(cpu.program_counter == 0x8003);
+}
