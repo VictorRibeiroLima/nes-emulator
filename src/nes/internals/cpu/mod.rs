@@ -44,8 +44,7 @@ pub struct CPU {
 
 impl Memory for CPU {
     fn read_from_memory(&self, addr: u16) -> u8 {
-        let result = self.memory[addr as usize];
-        result
+        return self.memory[addr as usize];
     }
     fn write_to_memory(&mut self, addr: u16, data: u8) {
         self.memory[addr as usize] = data;
@@ -111,7 +110,7 @@ impl CPU {
             register_a: 0,
             register_x: 0,
             register_y: 0,
-            status: StatusFlags::empty(),
+            status: StatusFlags::from_bits_truncate(0b100100),
             program_counter: 0,
             stack_pointer: STACK_SIZE, //0x0100 - 0x01ff is used for the stack
             memory: [0; 0xFFFF],
@@ -130,7 +129,7 @@ impl CPU {
         self.register_a = 0;
         self.register_x = 0;
         self.register_y = 0;
-        self.status = StatusFlags::empty();
+        self.status = StatusFlags::from_bits_truncate(0b100100);
         self.stack_pointer = STACK_SIZE;
 
         //reads the addr of the beginning of the loaded program
@@ -527,8 +526,8 @@ impl CPU {
     }
 
     fn branch(&mut self, condition: bool) {
-        let offset = self.read_from_memory(self.program_counter);
-        self.program_counter += 1;
+        let offset = self.read_from_memory(self.program_counter) as i8;
+        self.program_counter = self.program_counter.wrapping_add(1);
         if condition {
             self.program_counter = self.program_counter.wrapping_add(offset as u16);
         }
@@ -628,8 +627,8 @@ impl CPU {
     }
 
     fn stack_pop_le(&mut self) -> u16 {
-        let high = self.stack_pop() as u16;
         let low = self.stack_pop() as u16;
+        let high = self.stack_pop() as u16;
         return (high << 8) | low;
     }
 
