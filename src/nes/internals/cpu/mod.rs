@@ -119,10 +119,10 @@ impl CPU {
 
     pub fn load(&mut self, program: Vec<u8>) {
         //loads the program into memory from 0x8000 addr until the len of the program
-        self.memory[0x8000..(0x8000 + program.len())].copy_from_slice(&program[..]);
+        self.memory[0x600..(0x600 + program.len())].copy_from_slice(&program[..]);
 
         //writes on the addr 0xfffc the addr of the beginning of the loaded program
-        self.write_to_memory_le(0xfffc, 0x8000);
+        self.write_to_memory_le(0xfffc, 0x600);
     }
 
     pub fn reset(&mut self) {
@@ -142,7 +142,7 @@ impl CPU {
         self.run();
     }
 
-    pub fn run(&mut self) {
+    pub fn run_with_callback<F: FnMut(&mut CPU)>(&mut self, mut callback: F) {
         loop {
             let opcode_value = self.read_from_memory(self.program_counter);
             self.program_counter += 1;
@@ -491,7 +491,12 @@ impl CPU {
                     break;
                 }
             }
+            callback(self);
         }
+    }
+
+    pub fn run(&mut self) {
+        self.run_with_callback(|_| {});
     }
 
     fn set_register_a(&mut self, value: u8) {
