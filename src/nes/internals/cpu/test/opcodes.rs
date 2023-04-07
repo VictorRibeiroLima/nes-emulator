@@ -4,6 +4,48 @@ use crate::nes::internals::{
 };
 
 #[test]
+fn test_adc_0x69_immediate() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x01;
+    cpu.load(vec![0x69, 0x01, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x02);
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+    assert!(!cpu.status.contains(StatusFlags::OVERFLOW));
+}
+
+#[test]
+fn test_adc_0x69_immediate_overflow_set() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x50;
+    cpu.load(vec![0x69, 0x50, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0xa0);
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+    assert!(cpu.status.contains(StatusFlags::OVERFLOW));
+}
+
+#[test]
+fn test_adc_0x69_immediate_overflow_and_carry_set() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0xd0;
+    cpu.load(vec![0x69, 0x90, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x60); //0x160 overflowed to 0x60
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+    assert!(cpu.status.contains(StatusFlags::OVERFLOW));
+}
+
+#[test]
 fn test_lda_from_memory() {
     let mut cpu = CPU::new();
     cpu.write_to_memory(0x10, 0x55);
@@ -2808,6 +2850,51 @@ fn test_rts_0x60() {
     cpu.load(vec![0x60]);
     cpu.run();
     assert_eq!(cpu.program_counter, 0x8002); //0x8001(rts) + 1(brk read)
+}
+
+#[test]
+fn test_sbc_0xe9_immediate() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x02;
+    cpu.status.insert(StatusFlags::CARRY);
+    cpu.load(vec![0xe9, 0x02, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x00);
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::OVERFLOW));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_sbc_0xe9_immediate_overflow() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0x50;
+    cpu.status.insert(StatusFlags::CARRY);
+    cpu.load(vec![0xe9, 0xb0, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0xa0);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::OVERFLOW));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
+fn test_sbc_0xe9_immediate_carry_overflow() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0xd0;
+    cpu.status.insert(StatusFlags::CARRY);
+    cpu.load(vec![0xe9, 0x70, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.register_a, 0x60);
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(cpu.status.contains(StatusFlags::OVERFLOW));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
 }
 
 #[test]

@@ -149,8 +149,9 @@ impl CPU {
             self.program_counter += 1;
             let opcode = Opcodes::from_u8(opcode_value).expect("Valid opcode");
             match opcode {
-                Opcodes::ADC(_) => {
-                    todo!();
+                Opcodes::ADC(addr_mode) => {
+                    let value = self.get_value_from_memory(addr_mode);
+                    self.add_to_register_a(value);
                 }
                 Opcodes::AND(addr_mode) => {
                     let value = self.get_value_from_memory(addr_mode);
@@ -423,8 +424,10 @@ impl CPU {
                     let addr = self.stack_pop_le();
                     self.program_counter = addr + 1;
                 }
-                Opcodes::SBC(_) => {
-                    todo!()
+                Opcodes::SBC(addr_mode) => {
+                    let value = self.get_value_from_memory(addr_mode);
+                    let sub_value = (value as i8).wrapping_neg().wrapping_sub(1);
+                    self.add_to_register_a(sub_value as u8);
                 }
                 Opcodes::SEC => {
                     self.status.insert(StatusFlags::CARRY);
@@ -486,7 +489,6 @@ impl CPU {
                     self.update_zero_flag(result);
                 }
                 Opcodes::BRK => {
-                    //todo!()
                     break;
                 }
             }
@@ -624,5 +626,31 @@ impl CPU {
         let high = self.stack_pop() as u16;
         let low = self.stack_pop() as u16;
         return (high << 8) | low;
+    }
+
+    fn add_to_register_a(&mut self, value: u8) {
+        let carry_bit = self.status.contains(StatusFlags::CARRY) as u16;
+        let sum = self.register_a as u16 + value as u16 + carry_bit;
+
+        // 0xff = 255.
+        // 255 = 0b1111_1111 the maximum amount in 8 bits.
+        let carry = sum > 0xff;
+
+        if carry {
+            self.status.insert(StatusFlags::CARRY);
+        } else {
+            self.status.remove(StatusFlags::CARRY);
+        }
+
+        let result = sum as u8;
+
+        // weird overflow check
+        if (value ^ result) & (result ^ self.register_a) & 0x80 != 0 {
+            self.status.insert(StatusFlags::OVERFLOW);
+        } else {
+            self.status.remove(StatusFlags::OVERFLOW)
+        }
+
+        self.set_register_a(result);
     }
 }
