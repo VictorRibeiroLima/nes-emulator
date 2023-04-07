@@ -11,13 +11,14 @@ use super::{
 };
 
 bitflags!(
+    #[derive(Clone)]
     pub struct StatusFlags: u8 {
         const CARRY = 0b0000_0001;
         const ZERO = 0b0000_0010;
         const INTERRUPT_DISABLE = 0b0000_0100;
         const DECIMAL_MODE = 0b0000_1000;
         const BREAK = 0b0001_0000;
-        const UNUSED = 0b0010_0000;
+        const BREAK2 = 0b0010_0000;
         const OVERFLOW = 0b0100_0000;
         const NEGATIVE = 0b1000_0000;
     }
@@ -347,7 +348,11 @@ impl CPU {
                     self.stack_push(value);
                 }
                 Opcodes::PHP => {
-                    let value = self.status.bits();
+                    //http://wiki.nesdev.com/w/index.php/CPU_status_flag_behavior
+                    let mut flags = self.status.clone();
+                    flags.insert(StatusFlags::BREAK);
+                    flags.insert(StatusFlags::BREAK2);
+                    let value = flags.bits();
                     self.stack_push(value);
                 }
                 Opcodes::PLA => {
@@ -357,6 +362,8 @@ impl CPU {
                 Opcodes::PLP => {
                     let value = self.stack_pop();
                     self.status = StatusFlags::from_bits_truncate(value);
+                    self.status.remove(StatusFlags::BREAK);
+                    self.status.insert(StatusFlags::BREAK2);
                 }
                 Opcodes::ROL(addr_mode) => {
                     let value: u8;
@@ -408,6 +415,8 @@ impl CPU {
                     let status = self.stack_pop();
                     let addr = self.stack_pop_le();
                     self.status = StatusFlags::from_bits_truncate(status);
+                    self.status.remove(StatusFlags::BREAK);
+                    self.status.insert(StatusFlags::BREAK2);
                     self.program_counter = addr;
                 }
                 Opcodes::RTS => {

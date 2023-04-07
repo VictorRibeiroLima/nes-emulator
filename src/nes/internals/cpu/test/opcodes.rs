@@ -1967,12 +1967,17 @@ fn test_pha_0x48_full_stack() {
 fn test_php_0x08() {
     let mut cpu = CPU::new();
     cpu.program_counter = 0x8000;
-    cpu.status =
-        StatusFlags::CARRY | StatusFlags::NEGATIVE | StatusFlags::OVERFLOW | StatusFlags::BREAK;
+    cpu.status = StatusFlags::CARRY | StatusFlags::NEGATIVE | StatusFlags::OVERFLOW;
     cpu.load(vec![0x08]);
     cpu.run();
     assert!(cpu.stack_pointer == 0xfe);
-    assert!(cpu.memory[0x1ff] == 0b1101_0001);
+
+    let flags = StatusFlags::from_bits_truncate(cpu.memory[0x1ff]);
+    assert!(flags.contains(StatusFlags::BREAK)); //break flags are used to indicate the type of interrupt, so they are set in a particular way in some opcodes
+    assert!(flags.contains(StatusFlags::BREAK2));
+    assert!(flags.contains(StatusFlags::CARRY));
+    assert!(flags.contains(StatusFlags::NEGATIVE));
+    assert!(flags.contains(StatusFlags::OVERFLOW));
 }
 
 #[test]
@@ -2088,7 +2093,8 @@ fn test_plp_0x28() {
     assert!(cpu.status.contains(StatusFlags::CARRY));
     assert!(cpu.status.contains(StatusFlags::NEGATIVE));
     assert!(cpu.status.contains(StatusFlags::OVERFLOW));
-    assert!(cpu.status.contains(StatusFlags::BREAK));
+    assert!(!cpu.status.contains(StatusFlags::BREAK)); // break flags are used to indicate the type of interrupt, so they are set in a particular way in some opcodes
+    assert!(cpu.status.contains(StatusFlags::BREAK2));
 }
 
 #[test]
@@ -2786,7 +2792,8 @@ fn test_rti_0x40() {
     assert!(!cpu.status.contains(StatusFlags::ZERO));
     assert!(!cpu.status.contains(StatusFlags::INTERRUPT_DISABLE));
     assert!(!cpu.status.contains(StatusFlags::DECIMAL_MODE));
-    assert!(!cpu.status.contains(StatusFlags::BREAK));
+    assert!(!cpu.status.contains(StatusFlags::BREAK)); //break flags are used to indicate the type of interrupt, so they are set in a particular way in some opcodes
+    assert!(cpu.status.contains(StatusFlags::BREAK2));
     assert!(cpu.status.contains(StatusFlags::OVERFLOW));
     assert!(cpu.status.contains(StatusFlags::NEGATIVE));
 }
