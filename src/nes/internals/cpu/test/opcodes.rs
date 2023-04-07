@@ -243,6 +243,18 @@ fn test_0x6c_without_page_boundary_crossing() {
 }
 
 #[test]
+fn test_0x20() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0x20, 0x00, 0x70, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.program_counter, 0x7001); // 0x7000 + 1 because of the read on the brk instruction
+    assert_eq!(cpu.stack_pointer, 0xfd);
+    assert_eq!(cpu.memory[0x01ff], 0x80);
+    assert_eq!(cpu.memory[0x01fe], 0x02);
+}
+
+#[test]
 fn test_5_ops_working_together() {
     let mut cpu = CPU::new();
     cpu.load_and_run(vec![0xa9, 0xc0, 0xaa, 0xe8, 0x00]);
@@ -2757,6 +2769,18 @@ fn test_ror_0x7e_negative() {
     assert!(!cpu.status.contains(StatusFlags::CARRY));
     assert!(cpu.status.contains(StatusFlags::NEGATIVE));
     assert!(!cpu.status.contains(StatusFlags::ZERO));
+}
+
+#[test]
+fn test_rts_0x60() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.stack_pointer = 0xfd;
+    cpu.memory[0x01ff] = 0x00;
+    cpu.memory[0x01fe] = 0x80;
+    cpu.load(vec![0x60]);
+    cpu.run();
+    assert_eq!(cpu.program_counter, 0x8002); //0x8001(rts) + 1(brk read)
 }
 
 #[test]

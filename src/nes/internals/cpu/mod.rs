@@ -294,13 +294,15 @@ impl CPU {
                             indirect_ref = self.read_from_memory_le(mem_address);
                         };
 
-                        println!("JMP indirect: {:#x}", indirect_ref);
-
                         self.program_counter = indirect_ref;
                     }
                 }
-                Opcodes::JSR(_) => {
-                    todo!()
+                Opcodes::JSR(addr_mode) => {
+                    let mode_increment = addr_mode.get_counter_increment();
+                    let addr = self.get_memory_addr(&addr_mode);
+                    let return_addr = self.program_counter + mode_increment - 1;
+                    self.stack_push_le(return_addr);
+                    self.program_counter = addr;
                 }
                 Opcodes::LDA(addr_mode) => {
                     let value = self.get_value_from_memory(addr_mode);
@@ -406,7 +408,9 @@ impl CPU {
                     todo!()
                 }
                 Opcodes::RTS => {
-                    todo!()
+                    let addr = self.stack_pop_le();
+                    println!("RTS: addr: {:#X}", addr);
+                    self.program_counter = addr + 1;
                 }
                 Opcodes::SBC(_) => {
                     todo!()
@@ -579,6 +583,13 @@ impl CPU {
         }
     }
 
+    fn stack_push_le(&mut self, value: u16) {
+        let high = (value >> 8) as u8;
+        let low = (value & 0x00FF) as u8;
+        self.stack_push(high);
+        self.stack_push(low);
+    }
+
     fn stack_pop(&mut self) -> u8 {
         /*when the pointer reaches 0xFF it will underflow and start at 0x00.
         this is not necessarily a problem.
@@ -594,7 +605,14 @@ impl CPU {
         }
 
         let addr = STACK_BASE + (self.stack_pointer) as u16;
+        println!("stack pop from addr: {:#X}", addr);
         let result = self.read_from_memory(addr);
         return result;
+    }
+
+    fn stack_pop_le(&mut self) -> u16 {
+        let high = self.stack_pop() as u16;
+        let low = self.stack_pop() as u16;
+        return (high << 8) | low;
     }
 }

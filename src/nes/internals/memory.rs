@@ -15,7 +15,7 @@ pub trait Memory {
         /*hi << 8 moves the value of the first half of this 16bit data to the second half
           0b0000_0000_1111_1111 becomes 0b1111_1111_0000_0000
         */
-        return (hi << 8) | (lo as u16);
+        return (hi << 8) | lo;
     }
 
     fn write_to_memory_le(&mut self, addr: u16, data: u16) {
