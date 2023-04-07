@@ -143,7 +143,7 @@ impl CPU {
         self.run();
     }
 
-    pub fn run(&mut self) {
+    pub fn run_with_callback<F: FnMut(&mut CPU)>(&mut self, mut callback: F) {
         loop {
             let opcode_value = self.read_from_memory(self.program_counter);
             self.program_counter += 1;
@@ -492,7 +492,12 @@ impl CPU {
                     break;
                 }
             }
+            callback(self);
         }
+    }
+
+    pub fn run(&mut self) {
+        self.run_with_callback(|_| {});
     }
 
     fn set_register_a(&mut self, value: u8) {
