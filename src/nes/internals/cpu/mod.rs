@@ -405,11 +405,13 @@ impl CPU {
                     }
                 }
                 Opcodes::RTI => {
-                    todo!()
+                    let status = self.stack_pop();
+                    let addr = self.stack_pop_le();
+                    self.status = StatusFlags::from_bits_truncate(status);
+                    self.program_counter = addr;
                 }
                 Opcodes::RTS => {
                     let addr = self.stack_pop_le();
-                    println!("RTS: addr: {:#X}", addr);
                     self.program_counter = addr + 1;
                 }
                 Opcodes::SBC(_) => {
@@ -605,7 +607,6 @@ impl CPU {
         }
 
         let addr = STACK_BASE + (self.stack_pointer) as u16;
-        println!("stack pop from addr: {:#X}", addr);
         let result = self.read_from_memory(addr);
         return result;
     }

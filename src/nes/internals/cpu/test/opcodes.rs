@@ -2772,6 +2772,26 @@ fn test_ror_0x7e_negative() {
 }
 
 #[test]
+fn test_rti_0x40() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.stack_pointer = 0xfc;
+    cpu.memory[0x01ff] = 0x00;
+    cpu.memory[0x01fe] = 0x81;
+    cpu.memory[0x01fd] = 0b1100_0001;
+    cpu.load(vec![0x40]);
+    cpu.run();
+    assert_eq!(cpu.program_counter, 0x8101); //0x8100 (rti) + 1(brk instruction)
+    assert!(cpu.status.contains(StatusFlags::CARRY));
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::INTERRUPT_DISABLE));
+    assert!(!cpu.status.contains(StatusFlags::DECIMAL_MODE));
+    assert!(!cpu.status.contains(StatusFlags::BREAK));
+    assert!(cpu.status.contains(StatusFlags::OVERFLOW));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+}
+
+#[test]
 fn test_rts_0x60() {
     let mut cpu = CPU::new();
     cpu.program_counter = 0x8000;
