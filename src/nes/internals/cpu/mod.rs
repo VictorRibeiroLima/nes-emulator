@@ -43,7 +43,8 @@ pub struct CPU {
 
 impl Memory for CPU {
     fn read_from_memory(&self, addr: u16) -> u8 {
-        return self.memory[addr as usize];
+        let result = self.memory[addr as usize];
+        result
     }
     fn write_to_memory(&mut self, addr: u16, data: u8) {
         self.memory[addr as usize] = data;
@@ -187,8 +188,13 @@ impl CPU {
                 Opcodes::BEQ => {
                     self.branch(self.status.contains(StatusFlags::ZERO));
                 }
-                Opcodes::BIT(_) => {
-                    todo!()
+                Opcodes::BIT(addr_mode) => {
+                    let value = self.get_value_from_memory(addr_mode);
+                    let result = self.register_a & value;
+                    self.update_negative_flag(value);
+                    self.update_overflow_flag(value);
+
+                    self.update_zero_flag(result);
                 }
                 Opcodes::BMI => {
                     self.branch(self.status.contains(StatusFlags::NEGATIVE));
@@ -262,8 +268,36 @@ impl CPU {
                     self.update_negative_flag(result);
                     self.update_zero_flag(result);
                 }
-                Opcodes::JMP(_) => {
-                    todo!()
+                Opcodes::JMP(addr_mode) => {
+                    if addr_mode == AddressingMode::ABSOLUTE {
+                        let addr = self.get_memory_addr(&addr_mode);
+                        self.program_counter = addr;
+                    } else {
+                        let mem_address = self.read_from_memory_le(self.program_counter);
+                        //6502 bug mode with with page boundary:
+                        //  if address $3000 contains $40, $30FF contains $80, and $3100 contains $50,
+                        // the result of JMP ($30FF) will be a transfer of control to $4080 rather than $5080 as you intended
+                        // i.e. the 6502 took the low byte of the address from $30FF and the high byte from $3000
+
+                        let indirect_ref;
+
+                        // any address ending in 0xFF will be affected by the bug
+                        if mem_address & 0x00FF == 0x00FF {
+                            /*
+                                the bug is that the 6502 takes the low byte from the correct address.
+                                However, it takes the high byte from 0x**00 (where * is any value) instead of 0x**ff + 1
+                            */
+                            let lo = self.read_from_memory(mem_address);
+                            let hi = self.read_from_memory(mem_address & 0xFF00);
+                            indirect_ref = (hi as u16) << 8 | (lo as u16);
+                        } else {
+                            indirect_ref = self.read_from_memory_le(mem_address);
+                        };
+
+                        println!("JMP indirect: {:#x}", indirect_ref);
+
+                        self.program_counter = indirect_ref;
+                    }
                 }
                 Opcodes::JSR(_) => {
                     todo!()
@@ -498,6 +532,17 @@ impl CPU {
         } else {
             //if the result is not 0 the z flag should be set to false
             self.status.remove(StatusFlags::ZERO);
+        }
+    }
+
+    //This method will see the result of an operation and set the V flag accordantly
+    fn update_overflow_flag(&mut self, result: u8) {
+        if result & 0b0100_0000 != 0 {
+            //if the result 6's bit is set than it's a negative value and the flag must be set
+            self.status.insert(StatusFlags::OVERFLOW);
+        } else {
+            //if the result 6's bit not is set than it's a positive value and the flag must be unset
+            self.status.remove(StatusFlags::OVERFLOW);
         }
     }
 

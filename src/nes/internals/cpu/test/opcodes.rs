@@ -212,6 +212,37 @@ fn test_0xc8_overflow() {
 }
 
 #[test]
+fn test_0x4c() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.load(vec![0x4c, 0x00, 0x70, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.program_counter, 0x7001);
+}
+
+#[test]
+fn test_0x6c_with_page_boundary_crossing() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.memory[0x70ff] = 0xff;
+    cpu.memory[0x7000] = 0x71; // the cpu will read from 0x7000 because of the page boundary crossing bug, the correct value is 0x7100
+    cpu.load(vec![0x6c, 0xff, 0x70, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.program_counter, 0x7200); // 0x71ff + 1 because of the read on the brk instruction
+}
+
+#[test]
+fn test_0x6c_without_page_boundary_crossing() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.memory[0x70fd] = 0xff;
+    cpu.memory[0x70fe] = 0x71; // cpu reading from the correct value because the page boundary is not crossed
+    cpu.load(vec![0x6c, 0xfd, 0x70, 0x00]);
+    cpu.run();
+    assert_eq!(cpu.program_counter, 0x7200); // 0x71ff + 1 because of the read on the brk instruction
+}
+
+#[test]
 fn test_5_ops_working_together() {
     let mut cpu = CPU::new();
     cpu.load_and_run(vec![0xa9, 0xc0, 0xaa, 0xe8, 0x00]);
@@ -525,6 +556,84 @@ fn test_beq_0xf0_zero_flag_not_set() {
     cpu.load(vec![0xf0, 0x02, 0xa9, 0xaa, 0x00]);
     cpu.run();
     assert!(cpu.register_a == 0xaa); //set. instruction was executed
+}
+
+#[test]
+fn test_bit_0x24_set_zero_flag() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0b0110_0000;
+    cpu.memory[0xff] = 0b0000_1100;
+    cpu.load(vec![0x24, 0xff]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+    assert!(!cpu.status.contains(StatusFlags::OVERFLOW));
+}
+
+#[test]
+fn test_bit_0x24_set_negative_flag() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0b0110_0000;
+    cpu.memory[0xff] = 0b1100_1100;
+    cpu.load(vec![0x24, 0xff]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+    assert!(cpu.status.contains(StatusFlags::OVERFLOW));
+}
+
+#[test]
+fn test_bit_0x24_set_overflow_flag() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0b0110_0000;
+    cpu.memory[0xff] = 0b0100_1100;
+    cpu.load(vec![0x24, 0xff]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+    assert!(cpu.status.contains(StatusFlags::OVERFLOW));
+}
+
+#[test]
+fn tets_bit_0x2c_set_zero_flag() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0b0110_0000;
+    cpu.memory[0x0201] = 0b0000_1100;
+    cpu.load(vec![0x2c, 0x01, 0x02]);
+    cpu.run();
+    assert!(cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+    assert!(!cpu.status.contains(StatusFlags::OVERFLOW));
+}
+
+#[test]
+fn test_bit_0x2c_set_negative_flag() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0b0110_0000;
+    cpu.memory[0x0201] = 0b1100_1100;
+    cpu.load(vec![0x2c, 0x01, 0x02]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(cpu.status.contains(StatusFlags::NEGATIVE));
+    assert!(cpu.status.contains(StatusFlags::OVERFLOW));
+}
+
+#[test]
+fn test_bit_0x2c_set_overflow_flag() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_a = 0b0110_0000;
+    cpu.memory[0x0201] = 0b0100_1100;
+    cpu.load(vec![0x2c, 0x01, 0x02]);
+    cpu.run();
+    assert!(!cpu.status.contains(StatusFlags::ZERO));
+    assert!(!cpu.status.contains(StatusFlags::NEGATIVE));
+    assert!(cpu.status.contains(StatusFlags::OVERFLOW));
 }
 
 #[test]
@@ -2862,5 +2971,16 @@ fn test_txs() {
     cpu.load(vec![0x9a]);
     cpu.run();
     assert!(cpu.stack_pointer == 0x42);
+    assert!(cpu.program_counter == 0x8002);
+}
+
+#[test]
+fn test_tya() {
+    let mut cpu = CPU::new();
+    cpu.program_counter = 0x8000;
+    cpu.register_y = 0x42;
+    cpu.load(vec![0x98]);
+    cpu.run();
+    assert!(cpu.register_a == 0x42);
     assert!(cpu.program_counter == 0x8002);
 }
