@@ -104,7 +104,6 @@ impl CPU {
             let opcode_value = self.read_from_memory(self.program_counter);
             self.program_counter += 1;
             let opcode = Opcodes::from_u8(opcode_value).expect("Valid opcode");
-            println!("opcode: {:?}", opcode);
             match opcode {
                 Opcodes::ADC(addr_mode) => {
                     let value = self.get_value_from_memory(addr_mode);
