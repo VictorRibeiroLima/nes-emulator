@@ -6,6 +6,7 @@ mod test;
 use bitflags::bitflags;
 
 use super::{
+    bus::Bus,
     memory::Memory,
     opcodes::{AddressingMode, Opcodes},
 };
@@ -39,73 +40,21 @@ pub struct CPU {
     status: StatusFlags,
     program_counter: u16,
     stack_pointer: u8,
-    memory: [u8; 0xFFFF],
+    bus: Bus,
 }
 
 impl Memory for CPU {
     fn read_from_memory(&self, addr: u16) -> u8 {
-        return self.memory[addr as usize];
+        self.bus.read_from_memory(addr)
     }
+
     fn write_to_memory(&mut self, addr: u16, data: u8) {
-        self.memory[addr as usize] = data;
-    }
-
-    fn get_memory_addr<T: Borrow<AddressingMode>>(&self, mode: T) -> u16 {
-        match mode.borrow() {
-            AddressingMode::IMMEDIATE => self.program_counter,
-
-            AddressingMode::ZERO_PAGE => self.read_from_memory(self.program_counter) as u16,
-
-            AddressingMode::ABSOLUTE => self.read_from_memory_le(self.program_counter),
-
-            AddressingMode::ZERO_PAGE_X => {
-                let pos = self.read_from_memory(self.program_counter);
-                let addr = pos.wrapping_add(self.register_x) as u16;
-                return addr;
-            }
-            AddressingMode::ZERO_PAGE_Y => {
-                let pos = self.read_from_memory(self.program_counter);
-                let addr = pos.wrapping_add(self.register_y) as u16;
-                return addr;
-            }
-
-            AddressingMode::ABSOLUTE_X => {
-                let base = self.read_from_memory_le(self.program_counter);
-                let addr = base.wrapping_add(self.register_x as u16);
-                return addr;
-            }
-            AddressingMode::ABSOLUTE_Y => {
-                let base = self.read_from_memory_le(self.program_counter);
-                let addr = base.wrapping_add(self.register_y as u16);
-                return addr;
-            }
-
-            AddressingMode::INDIRECT_X => {
-                let base = self.read_from_memory(self.program_counter);
-
-                let ptr: u8 = base.wrapping_add(self.register_x);
-
-                let lo = self.read_from_memory(ptr as u16);
-                let hi = self.read_from_memory(ptr.wrapping_add(1) as u16);
-                let addr = (hi as u16) << 8 | (lo as u16);
-                return addr;
-            }
-            AddressingMode::INDIRECT_Y => {
-                let base = self.read_from_memory(self.program_counter);
-
-                let lo = self.read_from_memory(base as u16);
-                let hi = self.read_from_memory(base.wrapping_add(1) as u16);
-                let deref_base = (hi as u16) << 8 | (lo as u16);
-                let addr = deref_base.wrapping_add(self.register_y as u16);
-                return addr;
-            }
-            _ => panic!("Invalid addressing mode"),
-        }
+        self.bus.write_to_memory(addr, data);
     }
 }
 
 impl CPU {
-    pub fn new() -> Self {
+    pub fn new(bus: Bus) -> CPU {
         CPU {
             register_a: 0,
             register_x: 0,
@@ -113,16 +62,19 @@ impl CPU {
             status: StatusFlags::from_bits_truncate(0b100100),
             program_counter: 0,
             stack_pointer: STACK_SIZE, //0x0100 - 0x01ff is used for the stack
-            memory: [0; 0xFFFF],
+            bus,
         }
     }
 
     pub fn load(&mut self, program: Vec<u8>) {
-        //loads the program into memory from 0x8000 addr until the len of the program
-        self.memory[0x8000..(0x8000 + program.len())].copy_from_slice(&program[..]);
+        //loads the program into ram from 0x600 addr until the len of the program
+        for i in 0..(program.len() as u16) {
+            self.write_to_memory(0x0600 + i, program[i as usize]);
+        }
 
         //writes on the addr 0xfffc the addr of the beginning of the loaded program
-        self.write_to_memory_le(0xfffc, 0x8000);
+        //self.write_to_memory_le(0xfffc, 0x0600);
+        self.program_counter = 0x0600;
     }
 
     pub fn reset(&mut self) {
@@ -139,14 +91,20 @@ impl CPU {
     pub fn load_and_run(&mut self, program: Vec<u8>) {
         self.load(program);
         self.reset();
+        self.program_counter = 0x0600;
         self.run();
     }
 
     pub fn run(&mut self) {
+        self.run_with_callback(|_| {});
+    }
+
+    pub fn run_with_callback<F: FnMut(&mut CPU)>(&mut self, mut callback: F) {
         loop {
             let opcode_value = self.read_from_memory(self.program_counter);
             self.program_counter += 1;
             let opcode = Opcodes::from_u8(opcode_value).expect("Valid opcode");
+            println!("opcode: {:?}", opcode);
             match opcode {
                 Opcodes::ADC(addr_mode) => {
                     let value = self.get_value_from_memory(addr_mode);
@@ -491,6 +449,7 @@ impl CPU {
                     break;
                 }
             }
+            callback(self);
         }
     }
 
@@ -510,6 +469,59 @@ impl CPU {
         self.register_y = value;
         self.update_negative_flag(value);
         self.update_zero_flag(value);
+    }
+
+    fn get_memory_addr<T: Borrow<AddressingMode>>(&self, mode: T) -> u16 {
+        match mode.borrow() {
+            AddressingMode::IMMEDIATE => self.program_counter,
+
+            AddressingMode::ZERO_PAGE => self.read_from_memory(self.program_counter) as u16,
+
+            AddressingMode::ABSOLUTE => self.read_from_memory_le(self.program_counter),
+
+            AddressingMode::ZERO_PAGE_X => {
+                let pos = self.read_from_memory(self.program_counter);
+                let addr = pos.wrapping_add(self.register_x) as u16;
+                return addr;
+            }
+            AddressingMode::ZERO_PAGE_Y => {
+                let pos = self.read_from_memory(self.program_counter);
+                let addr = pos.wrapping_add(self.register_y) as u16;
+                return addr;
+            }
+
+            AddressingMode::ABSOLUTE_X => {
+                let base = self.read_from_memory_le(self.program_counter);
+                let addr = base.wrapping_add(self.register_x as u16);
+                return addr;
+            }
+            AddressingMode::ABSOLUTE_Y => {
+                let base = self.read_from_memory_le(self.program_counter);
+                let addr = base.wrapping_add(self.register_y as u16);
+                return addr;
+            }
+
+            AddressingMode::INDIRECT_X => {
+                let base = self.read_from_memory(self.program_counter);
+
+                let ptr: u8 = base.wrapping_add(self.register_x);
+
+                let lo = self.read_from_memory(ptr as u16);
+                let hi = self.read_from_memory(ptr.wrapping_add(1) as u16);
+                let addr = (hi as u16) << 8 | (lo as u16);
+                return addr;
+            }
+            AddressingMode::INDIRECT_Y => {
+                let base = self.read_from_memory(self.program_counter);
+
+                let lo = self.read_from_memory(base as u16);
+                let hi = self.read_from_memory(base.wrapping_add(1) as u16);
+                let deref_base = (hi as u16) << 8 | (lo as u16);
+                let addr = deref_base.wrapping_add(self.register_y as u16);
+                return addr;
+            }
+            _ => panic!("Invalid addressing mode"),
+        }
     }
 
     fn get_value_from_memory(&mut self, addr_mode: AddressingMode) -> u8 {

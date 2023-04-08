@@ -1,8 +1,9 @@
-use crate::nes::internals::{cpu::CPU, memory::Memory, opcodes::AddressingMode};
+use crate::nes::internals::{bus::Bus, cpu::CPU, memory::Memory, opcodes::AddressingMode};
 
 #[test]
 fn test_get_memory_addr_immediate() {
-    let mut cpu = CPU::new();
+    let bus = Bus::new();
+    let mut cpu = CPU::new(bus);
     cpu.program_counter = 0x0000;
     cpu.write_to_memory(0x0000, 0x10);
 
@@ -11,7 +12,8 @@ fn test_get_memory_addr_immediate() {
 
 #[test]
 fn test_get_memory_addr_zero_page() {
-    let mut cpu = CPU::new();
+    let bus = Bus::new();
+    let mut cpu = CPU::new(bus);
     cpu.program_counter = 0x0000;
     cpu.write_to_memory(0x0000, 0x10);
 
@@ -20,7 +22,8 @@ fn test_get_memory_addr_zero_page() {
 
 #[test]
 fn test_get_memory_addr_absolute() {
-    let mut cpu = CPU::new();
+    let bus = Bus::new();
+    let mut cpu = CPU::new(bus);
     cpu.program_counter = 0x0000;
     cpu.write_to_memory_le(0x0000, 0x20);
 
@@ -29,7 +32,8 @@ fn test_get_memory_addr_absolute() {
 
 #[test]
 fn test_get_memory_addr_zero_page_x() {
-    let mut cpu = CPU::new();
+    let bus = Bus::new();
+    let mut cpu = CPU::new(bus);
     cpu.program_counter = 0x0000;
     cpu.write_to_memory(0x0000, 0x20);
     cpu.register_x = 0x05;
@@ -39,7 +43,8 @@ fn test_get_memory_addr_zero_page_x() {
 
 #[test]
 fn test_get_memory_addr_zero_page_y() {
-    let mut cpu = CPU::new();
+    let bus = Bus::new();
+    let mut cpu = CPU::new(bus);
     cpu.program_counter = 0x0000;
     cpu.write_to_memory(0x0000, 0x20);
     cpu.register_y = 0x02;
@@ -49,7 +54,8 @@ fn test_get_memory_addr_zero_page_y() {
 
 #[test]
 fn test_get_memory_addr_absolute_x() {
-    let mut cpu = CPU::new();
+    let bus = Bus::new();
+    let mut cpu = CPU::new(bus);
     cpu.program_counter = 0x0000;
     cpu.write_to_memory_le(0x0000, 0x30);
     cpu.register_x = 0xFF;
@@ -59,7 +65,8 @@ fn test_get_memory_addr_absolute_x() {
 
 #[test]
 fn test_get_memory_addr_absolute_y() {
-    let mut cpu = CPU::new();
+    let bus = Bus::new();
+    let mut cpu = CPU::new(bus);
     cpu.program_counter = 0x0000;
     cpu.write_to_memory_le(0x0000, 0x40);
     cpu.register_y = 0xFF;
@@ -69,7 +76,8 @@ fn test_get_memory_addr_absolute_y() {
 
 #[test]
 fn test_get_memory_addr_indirect_x() {
-    let mut cpu = CPU::new();
+    let bus = Bus::new();
+    let mut cpu = CPU::new(bus);
     cpu.register_x = 0xFF;
     cpu.program_counter = 0x15;
     cpu.write_to_memory(0x15, 0x60);
@@ -81,7 +89,8 @@ fn test_get_memory_addr_indirect_x() {
 
 #[test]
 fn test_get_memory_addr_indirect_y() {
-    let mut cpu = CPU::new();
+    let bus = Bus::new();
+    let mut cpu = CPU::new(bus);
     cpu.program_counter = 0x41;
     cpu.register_y = 0x31;
     cpu.write_to_memory(0x41, 0x80);

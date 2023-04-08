@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use super::Memory;
 
 struct Cpu {
@@ -7,12 +5,6 @@ struct Cpu {
 }
 
 impl Memory for Cpu {
-    fn get_memory_addr<T: Borrow<crate::nes::internals::opcodes::AddressingMode>>(
-        &self,
-        _mode: T,
-    ) -> u16 {
-        return 0;
-    }
     fn read_from_memory(&self, addr: u16) -> u8 {
         return self.memory[addr as usize];
     }

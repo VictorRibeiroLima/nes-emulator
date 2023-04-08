@@ -1,13 +1,7 @@
-use std::borrow::Borrow;
-
-use super::opcodes::AddressingMode;
-
 #[cfg(test)]
 mod test;
 
 pub trait Memory {
-    fn get_memory_addr<T: Borrow<AddressingMode>>(&self, mode: T) -> u16;
-
     fn read_from_memory(&self, addr: u16) -> u8;
 
     fn write_to_memory(&mut self, addr: u16, data: u8);
