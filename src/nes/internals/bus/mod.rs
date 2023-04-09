@@ -12,9 +12,12 @@ pub const PG_ROOM_SIZE: u16 = PG_ROOM_END - PG_ROOM_START;
 pub const PPU_REGISTERS: u16 = 0x2000;
 pub const PPU_REGISTERS_MIRRORS_END: u16 = 0x3FFF;
 
+#[cfg(test)]
+pub mod test;
+
 pub struct Bus {
-    pub cpu_ram: [u8; RAM_SIZE as usize],
-    pub pg_room: [u8; PG_ROOM_SIZE as usize],
+    cpu_ram: [u8; RAM_SIZE as usize],
+    pg_room: [u8; PG_ROOM_SIZE as usize],
 }
 
 impl Bus {
